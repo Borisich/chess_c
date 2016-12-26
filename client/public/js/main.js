@@ -151,9 +151,59 @@ var GameField = React.createClass({
   displayName: 'GameField',
 
   getInitialState: function () {
+    function getInitialFieldState() {
+      var result = [];
+      //середина поля
+      for (var i = 0; i < 8; i++) {
+        result[i] = [];
+        for (var j = 2; j < 6; j++) {
+          result[i][j] = "empty";
+        }
+      }
+      //расстановка фигур
+      result[0][0] = "rook_b";
+      result[1][0] = "knight_b";
+      result[2][0] = "bishop_b";
+      result[3][0] = "queen_b";
+      result[4][0] = "king_b";
+      result[5][0] = "bishop_b";
+      result[6][0] = "knight_b";
+      result[7][0] = "rook_b";
+      result[0][1] = "pawn_b";
+      result[1][1] = "pawn_b";
+      result[2][1] = "pawn_b";
+      result[3][1] = "pawn_b";
+      result[4][1] = "pawn_b";
+      result[5][1] = "pawn_b";
+      result[6][1] = "pawn_b";
+      result[7][1] = "pawn_b";
+
+      result[0][6] = "pawn_w";
+      result[1][6] = "pawn_w";
+      result[2][6] = "pawn_w";
+      result[3][6] = "pawn_w";
+      result[4][6] = "pawn_w";
+      result[5][6] = "pawn_w";
+      result[6][6] = "pawn_w";
+      result[7][6] = "pawn_w";
+      result[0][7] = "rook_w";
+      result[1][7] = "knight_w";
+      result[2][7] = "bishop_w";
+      result[3][7] = "queen_w";
+      result[4][7] = "king_w";
+      result[5][7] = "bishop_w";
+      result[6][7] = "knight_w";
+      result[7][7] = "rook_w";
+
+      console.log(result);
+      return result;
+    };
+    var fS = getInitialFieldState();
+    console.log(fS);
     return {
       shown: true,
-      fieldState: ["empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty", "empty"],
+      //fieldState: ["empty","empty","empty","empty","empty","empty","empty","empty","empty"],
+      fieldState: getInitialFieldState(),
       myTurn: false,
       myNumber: 1,
       statusText: "",
@@ -384,22 +434,29 @@ var GameField = React.createClass({
   },
 
   render: function () {
+    var self = this;
+    function htmlField() {
+      console.log("FIELD STATE:");
+      console.log(self.state.fieldState);
+      var result = [];
+      var cnt = 1;
+      for (var i = 0; i < self.state.fieldState.length; i++) {
+        for (var j = 0; j < self.state.fieldState[i].length; j++) {
+          result.push(React.createElement('div', { id: cnt, className: self.state.fieldState[i][j] + " " + ((i + j) % 2 ? "black" : "white"), key: cnt }));
+          cnt++;
+        }
+      }
+      return result;
+    };
     if (this.state.shown) {
+
       return React.createElement(
         'div',
         null,
         React.createElement(
           'div',
           { onClick: this.clickHandler },
-          React.createElement('div', { id: '1', className: this.state.fieldState[0] }),
-          React.createElement('div', { id: '2', className: this.state.fieldState[1] }),
-          React.createElement('div', { id: '3', className: this.state.fieldState[2] }),
-          React.createElement('div', { id: '4', className: this.state.fieldState[3] }),
-          React.createElement('div', { id: '5', className: this.state.fieldState[4] }),
-          React.createElement('div', { id: '6', className: this.state.fieldState[5] }),
-          React.createElement('div', { id: '7', className: this.state.fieldState[6] }),
-          React.createElement('div', { id: '8', className: this.state.fieldState[7] }),
-          React.createElement('div', { id: '9', className: this.state.fieldState[8] })
+          htmlField()
         ),
         React.createElement(
           'div',
