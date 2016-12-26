@@ -1,5 +1,6 @@
 {
-  "name": "chess client",
+  "name": "chess_client",
+  "name": "chess_client",
   "version": "1.0.0",
   "description": "chess online game client",
   "main": "index.js",

@@ -8,7 +8,7 @@ var StatusBar = require('./StatusBar.jsx');
 var GameField = React.createClass({
     getInitialState: function(){
         return {
-            shown: false,
+            shown: true,
             fieldState: ["empty","empty","empty","empty","empty","empty","empty","empty","empty"],
             myTurn: false,
             myNumber: 1,
