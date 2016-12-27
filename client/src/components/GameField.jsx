@@ -300,9 +300,9 @@ var GameField = React.createClass({
         console.log(self.state.fieldState);
         var result = [];
         var cnt=1;
-        for (var i=0; i<self.state.fieldState.length; i++){
-          for(var j=0; j<self.state.fieldState[i].length; j++){
-            result.push(<div id={cnt} className={self.state.fieldState[i][j]+" "+((i+j) % 2 ? "black" : "white")} key={cnt}></div>);
+        for (var j=self.state.fieldState.length-1; j>-1; j--){
+          for(var i=0; i<self.state.fieldState[j].length; i++){
+            result.push(<div id={cnt} className={self.state.fieldState[i][j]+" "+((i+j) % 2 ? "white" : "black")} key={cnt}></div>);
             cnt++;
           }
         }
