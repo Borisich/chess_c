@@ -94,12 +94,12 @@ var InviteLink = React.createClass({
         if (this.state.shown) {
             return (
             <div>
-              <h1>Добро пожаловать в сетевую игру "Крестики-нолики"!</h1>
+              <h1>Добро пожаловать в сетевую игру "Chess Pro Incorporated"!</h1>
               <br/>
               {this.state.comment}
               <br/>
 
-              <h3>{this.state.link+"2"}</h3>
+              <h3>{this.state.link ? this.state.link+"2" : ""}</h3>
 
               {additionalInfo}
 
