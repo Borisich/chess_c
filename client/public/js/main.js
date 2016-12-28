@@ -201,10 +201,16 @@ var GameField = React.createClass({
     var fS = getInitialFieldState();
     console.log(fS);
     return {
-      shown: true,
+      shown: false,
       //fieldState: ["empty","empty","empty","empty","empty","empty","empty","empty","empty"],
       fieldState: getInitialFieldState(),
-      myTurn: false,
+      myTurn: true,
+      selectedFigure: {
+        selected: false,
+        i: undefined,
+        j: undefined,
+        class: undefined
+      },
       myNumber: 1,
       statusText: "",
       connectionText: "",
@@ -398,36 +404,127 @@ var GameField = React.createClass({
     socket.emit('restart canceled');
   },
   updateFieldState: function (state) {
-    var tmp = [];
-    for (var i = 0; i < state.length; i++) {
-      if (state[i] == 1) {
+    /*var tmp = [];
+    for (var i=0; i<state.length; i++){
+      if (state[i] == 1){
         tmp[i] = 'x';
-      } else if (state[i] == -1) {
+      }
+      else if (state[i] == -1){
         tmp[i] = 'o';
-      } else {
-        tmp[i] = 'empty';
+      }
+      else{
+          tmp[i] = 'empty';
+      }
+    }*/
+    this.setState({ fieldState: state });
+  },
+  getFieldStateById: function (id) {
+    //var self = this;
+    var i = (id - 1) % 8;
+    var jCalc = 64 - id + 1;
+    var jCalc2 = jCalc % 8 ? jCalc / 8 : (jCalc - 1) / 8;
+    var j = Math.floor(jCalc2);
+    var cs = this.state.fieldState[i][j];
+
+    return {
+      class: cs,
+      i: i,
+      j: j
+    };
+  },
+  isMyFigure: function (cl) {
+    var result = false;
+    if (this.state.myNumber == 1) {
+      switch (cl) {
+        case "rook_w":
+        case "knight_w":
+        case "bishop_w":
+        case "king_w":
+        case "queen_w":
+        case "pawn_w":
+          result = true;
+          break;
+        default:
+          result = false;
       }
     }
-    this.setState({ fieldState: tmp });
-  },
-
-  clickHandler: function (e) {
-    if (this.state.myTurn) {
-      var target = e.target;
-      if (this.state.fieldState[target.id - 1] == "empty") {
-        this.setState({ myTurn: false });
-        //обновить поле
-        var tmp = this.state.fieldState;
-        if (this.state.myNumber == 1) {
-          tmp[target.id - 1] = "x";
-        } else if (this.state.myNumber == 2) {
-          tmp[target.id - 1] = "o";
-        }
-        this.setState({ fieldState: tmp });
-        //отправить свой ход на сервер
-        socket.emit('turn done', { playerNumber: this.state.myNumber, targetId: target.id });
-        soundManager.play('turn_finished');
+    if (this.state.myNumber == 2) {
+      switch (cl) {
+        case "rook_b":
+        case "knight_b":
+        case "bishop_b":
+        case "king_b":
+        case "queen_b":
+        case "pawn_b":
+          result = true;
+          break;
+        default:
+          result = false;
       }
+    }
+    return result;
+  },
+  clickHandler: function (e) {
+    //var self = this;
+    if (this.state.myTurn) {
+      if (!this.state.selectedFigure.selected) {
+        //Выделяем фигуру
+        var target = e.target;
+        var selectedFigure = this.getFieldStateById(target.id);
+        //alert (selectedFigure.class + " " + selectedFigure.i + " " + selectedFigure.j)
+        if (this.isMyFigure(selectedFigure.class)) {
+          this.setState({
+            selectedFigure: {
+              selected: true,
+              i: selectedFigure.i,
+              j: selectedFigure.j,
+              class: selectedFigure.class
+            }
+          });
+        }
+      } else {
+        //перемещаем фигуру
+        var target = e.target;
+        var placeToMove = this.getFieldStateById(target.id);
+        //проверка возможности хода
+        var tmp = this.state.fieldState;
+        tmp[this.state.selectedFigure.i][this.state.selectedFigure.j] = "empty";
+        tmp[placeToMove.i][placeToMove.j] = this.state.selectedFigure.class;
+        if (this.state.selectedFigure.i != placeToMove.i || this.state.selectedFigure.j != placeToMove.j) {
+          this.setState({
+            myTurn: false
+          });
+          //отправить свой ход на сервер
+          socket.emit('turn done', { playerNumber: this.state.myNumber, field: this.state.fieldState });
+          soundManager.play('turn_finished');
+          //alert ("not my turn");
+        }
+        this.setState({
+          fieldState: tmp,
+          selectedFigure: {
+            selected: false,
+            i: undefined,
+            j: undefined,
+            class: undefined
+          }
+        });
+      }
+
+      /*if (this.state.fieldState[target.id-1] == "empty"){
+          this.setState({myTurn: false});
+          //обновить поле
+          var tmp = this.state.fieldState;
+          if (this.state.myNumber == 1){
+            tmp[target.id-1] = "x";
+          }
+          else if (this.state.myNumber == 2){
+            tmp[target.id-1] = "o";
+          }
+          this.setState({fieldState: tmp})
+          //отправить свой ход на сервер
+          socket.emit('turn done',{playerNumber: this.state.myNumber, targetId: target.id});
+          soundManager.play('turn_finished');
+      }*/
     }
     console.log("fieldState: ");
     console.log(this.state.fieldState);
@@ -440,10 +537,17 @@ var GameField = React.createClass({
       console.log(self.state.fieldState);
       var result = [];
       var cnt = 1;
+      var selected = "";
       for (var j = self.state.fieldState.length - 1; j > -1; j--) {
         for (var i = 0; i < self.state.fieldState[j].length; i++) {
-          result.push(React.createElement('div', { id: cnt, className: self.state.fieldState[i][j] + " " + ((i + j) % 2 ? "white" : "black"), key: cnt }));
+          if (self.state.selectedFigure.selected) {
+            if (self.state.selectedFigure.i == i && self.state.selectedFigure.j == j) {
+              selected = "selected";
+            }
+          };
+          result.push(React.createElement('div', { id: cnt, className: self.state.fieldState[i][j] + " " + ((i + j) % 2 ? "white" : "black") + " " + selected, key: cnt }));
           cnt++;
+          selected = "";
         }
       }
       return result;

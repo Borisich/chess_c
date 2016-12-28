@@ -11,7 +11,7 @@
     text-align: center;
 }
 #gamespace {
-    width: 900px;
+    width: 1100px;
     margin: 0 auto;
 
 }
@@ -48,6 +48,9 @@
 .white {
   	/*background-color: #FA6900;*/
     background-color: white;
+}
+.selected {
+  	box-shadow: inset 0 0 0 5px #f6fa35;
 }
 
 /*.empty:hover{
