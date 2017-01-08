@@ -19,8 +19,8 @@
 #field {
 
 	height: 800px;
-	width: 800px;
-    display: inline-block;
+	width: 860px;
+
 }
 
 #chat {
@@ -30,10 +30,10 @@
 /**{
   border: 1px solid black;
 }*/
-.empty,.black,.white {
+.empty,.black,.white,.horizontframe,.verticalframe,.cornerframe {
 	position: relative;
   border-radius: 0px;
-	margin-top: -4px;
+  margin-top: -4px;
 	display: inline-block;
 	height: 100px;
 	width: 100px;
@@ -41,6 +41,25 @@
   background-repeat:no-repeat;
   background-size:100px;
 
+}
+.cornerframe,.horizontframe,.verticalframe {
+  background-color: #FFE4C4;
+}
+.cornerframe {
+  height: 30px;
+  width: 30px;
+}
+.horizontframe {
+  line-height: 30px;
+  height: 30px;
+  text-align: center;
+  vertical-align: top; /*чтобы не съезжал вниз при наличии текста*/
+}
+.verticalframe {
+  line-height: 100px;
+  width: 30px;
+  text-align: center;
+  vertical-align: top; /*чтобы не съезжал вниз при наличии текста*/
 }
 .black {
   	background-color: #A4A4A4;

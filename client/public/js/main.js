@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var io = require('socket.io-client');
 
-const locally = false;
+const locally = true;
 if (locally) {
   var socket = io('http://localhost');
 } else {
@@ -161,39 +161,39 @@ var GameField = React.createClass({
         }
       }
       //расстановка фигур
-      result[0][0] = "rook_b";
-      result[1][0] = "knight_b";
-      result[2][0] = "bishop_b";
-      result[3][0] = "queen_b";
-      result[4][0] = "king_b";
-      result[5][0] = "bishop_b";
-      result[6][0] = "knight_b";
-      result[7][0] = "rook_b";
-      result[0][1] = "pawn_b";
-      result[1][1] = "pawn_b";
-      result[2][1] = "pawn_b";
-      result[3][1] = "pawn_b";
-      result[4][1] = "pawn_b";
-      result[5][1] = "pawn_b";
-      result[6][1] = "pawn_b";
-      result[7][1] = "pawn_b";
+      result[0][0] = "rook_w";
+      result[1][0] = "knight_w";
+      result[2][0] = "bishop_w";
+      result[3][0] = "queen_w";
+      result[4][0] = "king_w";
+      result[5][0] = "bishop_w";
+      result[6][0] = "knight_w";
+      result[7][0] = "rook_w";
+      result[0][1] = "pawn_w";
+      result[1][1] = "pawn_w";
+      result[2][1] = "pawn_w";
+      result[3][1] = "pawn_w";
+      result[4][1] = "pawn_w";
+      result[5][1] = "pawn_w";
+      result[6][1] = "pawn_w";
+      result[7][1] = "pawn_w";
 
-      result[0][6] = "pawn_w";
-      result[1][6] = "pawn_w";
-      result[2][6] = "pawn_w";
-      result[3][6] = "pawn_w";
-      result[4][6] = "pawn_w";
-      result[5][6] = "pawn_w";
-      result[6][6] = "pawn_w";
-      result[7][6] = "pawn_w";
-      result[0][7] = "rook_w";
-      result[1][7] = "knight_w";
-      result[2][7] = "bishop_w";
-      result[3][7] = "queen_w";
-      result[4][7] = "king_w";
-      result[5][7] = "bishop_w";
-      result[6][7] = "knight_w";
-      result[7][7] = "rook_w";
+      result[0][6] = "pawn_b";
+      result[1][6] = "pawn_b";
+      result[2][6] = "pawn_b";
+      result[3][6] = "pawn_b";
+      result[4][6] = "pawn_b";
+      result[5][6] = "pawn_b";
+      result[6][6] = "pawn_b";
+      result[7][6] = "pawn_b";
+      result[0][7] = "rook_b";
+      result[1][7] = "knight_b";
+      result[2][7] = "bishop_b";
+      result[3][7] = "queen_b";
+      result[4][7] = "king_b";
+      result[5][7] = "bishop_b";
+      result[6][7] = "knight_b";
+      result[7][7] = "rook_b";
 
       console.log(result);
       return result;
@@ -201,7 +201,7 @@ var GameField = React.createClass({
     var fS = getInitialFieldState();
     console.log(fS);
     return {
-      shown: false,
+      shown: true,
       //fieldState: ["empty","empty","empty","empty","empty","empty","empty","empty","empty"],
       fieldState: getInitialFieldState(),
       myTurn: true,
@@ -537,8 +537,38 @@ var GameField = React.createClass({
       console.log(self.state.fieldState);
       var result = [];
       var cnt = 1;
+      var framecnt = 100;
+      function horizontalFrame() {
+        for (var i = 0; i < self.state.fieldState[0].length; i++) {
+          result.push(React.createElement(
+            'div',
+            { id: framecnt, className: 'horizontframe', key: framecnt },
+            String.fromCharCode(i + 65)
+          ));
+          framecnt++;
+        }
+      };
+      function verticalFrame(j) {
+        result.push(React.createElement(
+          'div',
+          { id: framecnt, className: 'verticalframe', key: framecnt },
+          j
+        ));
+        framecnt++;
+      };
+      function cornerFrame() {
+        result.push(React.createElement('div', { id: framecnt, className: 'cornerframe', key: framecnt }));
+        framecnt++;
+      };
       var selected = "";
+      //верхняя рамка
+      cornerFrame();
+      horizontalFrame();
+      cornerFrame();
+      //поле
       for (var j = self.state.fieldState.length - 1; j > -1; j--) {
+        //боковая рамка
+        verticalFrame(j + 1);
         for (var i = 0; i < self.state.fieldState[j].length; i++) {
           if (self.state.selectedFigure.selected) {
             if (self.state.selectedFigure.i == i && self.state.selectedFigure.j == j) {
@@ -549,7 +579,13 @@ var GameField = React.createClass({
           cnt++;
           selected = "";
         }
+        //боковая рамка
+        verticalFrame(j + 1);
       }
+      //нижняя рамка
+      cornerFrame();
+      horizontalFrame();
+      cornerFrame();
       return result;
     };
     if (this.state.shown) {
