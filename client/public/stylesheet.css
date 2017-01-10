@@ -17,14 +17,15 @@
 }
 
 #field {
-
-	height: 800px;
+	height: 900px;
 	width: 860px;
+  float: left;
 
 }
 
 #chat {
     width: 200px;
+    height: 200px;
     float: right;
 }
 /**{
@@ -71,7 +72,9 @@
 .selected {
   	box-shadow: inset 0 0 0 5px #f6fa35;
 }
-
+.previousTurnMarked {
+  	box-shadow: inset 0 0 0 5px #8CCB5E;
+}
 /*.empty:hover{
     box-shadow: inset 0 0 0 5px #f6fa35;
 }*/

@@ -70,12 +70,26 @@ var GameField = React.createClass({
           console.log(result);
           return result;
         };
-        var fS = getInitialFieldState();
-        console.log(fS);
+        function getInitialFieldState1(){
+          var result = [];
+          //result.moved = null;
+          //середина поля
+          for (var i=0; i<8; i++){
+            result[i] = [];
+            for (var j=0; j<8; j++){
+              result[i][j]="empty";
+            }
+          }
+          console.log(result);
+          return result;
+        };
+
         return {
             shown: false,
             //fieldState: ["empty","empty","empty","empty","empty","empty","empty","empty","empty"],
-            fieldState: getInitialFieldState(),
+            fieldState: getInitialFieldState1(),
+            moved: {},
+            lastOpponentTurn: null,
             myTurn: true,
             selectedFigure: {
               selected: false,
@@ -158,8 +172,9 @@ var GameField = React.createClass({
         //Показать поле
         self.setState({shown: true});
         //отображение текущего положения дел
-        self.updateFieldState(gameData.field);
-        self.setState({myTurn: gameData.nowTurn, myNumber: gameData.playerNumber});
+        console.log("received field state: ");
+        console.log(gameData.field);
+        self.setState({myTurn: gameData.nowTurn, myNumber: gameData.playerNumber, fieldState: gameData.field, moved: gameData.moved, lastOpponentTurn: gameData.lastOpponentTurn});
         if (gameData.nowTurn) {
           soundManager.play('my_turn');
           self.setState({statusText: "Ваш ход!"});
@@ -276,21 +291,6 @@ var GameField = React.createClass({
       });
       socket.emit('restart canceled');
     },
-    updateFieldState: function(state){
-        /*var tmp = [];
-        for (var i=0; i<state.length; i++){
-          if (state[i] == 1){
-            tmp[i] = 'x';
-          }
-          else if (state[i] == -1){
-            tmp[i] = 'o';
-          }
-          else{
-              tmp[i] = 'empty';
-          }
-        }*/
-        this.setState ({fieldState: state});
-    },
     getFieldStateById: function(id){
       //var self = this;
       var i = (id-1) % 8;
@@ -381,7 +381,7 @@ var GameField = React.createClass({
           if ((selectedFigure.i == placeToMove.i) && (selectedFigure.j == placeToMove.j+1) && (placeToMove.class == "empty")){
             result = true;
           };
-          if ((selectedFigure.i == placeToMove.i) && (selectedFigure.j == placeToMove.j+2) && (placeToMove.class == "empty") && (selectedFigure.j == 1)){
+          if ((selectedFigure.i == placeToMove.i) && (selectedFigure.j == placeToMove.j+2) && (placeToMove.class == "empty") && (selectedFigure.j == 6)){
             result = true;
           };
           //поедание
@@ -469,7 +469,8 @@ var GameField = React.createClass({
           break;
         case "queen_b":
         case "queen_w":
-          var f = true;
+          var f_b = true;
+          var f_r = true;
           //Объединяем ладью и слона
           //Слон
           if (Math.abs(placeToMove.i-selectedFigure.i) == Math.abs(placeToMove.j-selectedFigure.j)){
@@ -477,12 +478,18 @@ var GameField = React.createClass({
             var maxJ = Math.max(selectedFigure.j, placeToMove.j);
             var minI = Math.min(selectedFigure.i, placeToMove.i);
             var maxI = Math.max(selectedFigure.i, placeToMove.i);
+            if (Math.abs(placeToMove.i-selectedFigure.i) ==0){
+              f_b = false;
+              break;
+            }
             for (var j = minJ+1, i = minI+1; j < maxJ; j++, i++) {
               if (this.state.fieldState[i][j] != "empty"){
-                f = false;
+                f_b = false;
                 break;
               }
             }
+          } else {
+            f_b = false;
           }
           //Ладья
           if(selectedFigure.i == placeToMove.i){
@@ -493,7 +500,7 @@ var GameField = React.createClass({
             }
             for (var j = minJ+1; j < maxJ; j++) {
               if (this.state.fieldState[selectedFigure.i][j] != "empty"){
-                f = false;
+                f_r = false;
                 break;
               }
             }
@@ -505,14 +512,15 @@ var GameField = React.createClass({
             }
             for (var i = minI+1; i < maxI; i++) {
               if (this.state.fieldState[i][selectedFigure.j] != "empty"){
-                f = false;
+                f_r = false;
                 break;
               }
             }
           } else {
-            f = false;
+            f_r = false;
           }
-          if (f){
+          //alert("f_b: " + f_b + " f_r: " + f_r);
+          if (f_b || f_r){
             if ((placeToMove.class == "empty") || opponentAttacked()){
               result = true;
             };
@@ -531,7 +539,7 @@ var GameField = React.createClass({
           //Рокировка
           var f = true;
           if((Math.abs(placeToMove.i-selectedFigure.i) == 2) && (Math.abs(placeToMove.j-selectedFigure.j) == 0)){
-            if (((placeToMove.i == 6) && (placeToMove.j == 0)) && !this.state.fieldState[4][0].moved && !this.state.fieldState[7][0].moved){
+            if (((placeToMove.i == 6) && (placeToMove.j == 0)) && !this.state.moved.king_w && !this.state.moved.rook_w_r){
               for (var i=5; i<7; i++){
                 if(this.state.fieldState[i][0] != "empty"){
                   f = false;
@@ -544,7 +552,7 @@ var GameField = React.createClass({
                 }
               }
             }
-            if (((placeToMove.i == 2) && (placeToMove.j == 0)) && !this.state.fieldState[4][0].moved && !this.state.fieldState[0][0].moved){
+            if (((placeToMove.i == 2) && (placeToMove.j == 0)) && !this.state.moved.king_w && !this.state.moved.rook_w_l){
               for (var i=1; i<4; i++){
                 if(this.state.fieldState[i][0] != "empty"){
                   f = false;
@@ -559,7 +567,7 @@ var GameField = React.createClass({
             }
 
 
-            if (((placeToMove.i == 6) && (placeToMove.j == 7)) && !this.state.fieldState[4][7].moved && !this.state.fieldState[7][7].moved){
+            if (((placeToMove.i == 6) && (placeToMove.j == 7)) && !this.state.moved.king_b && !this.state.moved.rook_b_r){
               for (var i=5; i<7; i++){
                 if(this.state.fieldState[i][7] != "empty"){
                   f = false;
@@ -572,7 +580,7 @@ var GameField = React.createClass({
                 }
               }
             }
-            if (((placeToMove.i == 2) && (placeToMove.j == 7)) && !this.state.fieldState[4][7].moved && !this.state.fieldState[0][7].moved){
+            if (((placeToMove.i == 2) && (placeToMove.j == 7)) && !this.state.moved.king_b && !this.state.moved.rook_b_l){
               for (var i=1; i<4; i++){
                 if(this.state.fieldState[i][7] != "empty"){
                   f = false;
@@ -650,12 +658,39 @@ var GameField = React.createClass({
               tmp[placeToMove.i][placeToMove.j] = this.state.selectedFigure.class;
               var i = this.state.selectedFigure.i;
               var j = this.state.selectedFigure.j;
-              if(((i==0) && (j==0)) || ((i==4) && (j==0)) || ((i==7) && (j==0)) || ((i==0) && (j==7)) || ((i==4) && (j==7)) || ((i==7) && (j==7))){
-                tmp[i][j].moved == true;
+              var tmp2 = this.state.moved;
+              if((i==0) && (j==0)){
+                tmp2.rook_w_l = true;
               }
+              if((i==4) && (j==0)){
+                tmp2.king_w = true;
+              }
+              if((i==7) && (j==0)){
+                tmp2.rook_w_r = true;
+              }
+              if((i==0) && (j==7)){
+                tmp2.rook_b_l = true;
+              }
+              if((i==4) && (j==7)){
+                tmp2.king_b = true;
+              }
+              if((i==7) && (j==7)){
+                tmp2.rook_b_r = true;
+              }
+
+
+              //отправить свой ход на сервер
+              var turnContent = [
+                [this.state.selectedFigure.i,this.state.selectedFigure.j],
+                [placeToMove.i,placeToMove.j]
+              ];
+              socket.emit('turn done',{playerNumber: this.state.myNumber, field: this.state.fieldState, moved: this.state.moved, turnContent: turnContent});
+              soundManager.play('turn_finished');
+
               this.setState({
                 myTurn: false,
                 fieldState: tmp,
+                moved: tmp2,
                 selectedFigure: {
                   selected: false,
                   i: undefined,
@@ -663,9 +698,6 @@ var GameField = React.createClass({
                   class: undefined
                 }
               });
-              //отправить свой ход на сервер
-              socket.emit('turn done',{playerNumber: this.state.myNumber, field: this.state.fieldState});
-              soundManager.play('turn_finished');
             }
             else{
               //Снять выделение
@@ -701,8 +733,8 @@ var GameField = React.createClass({
                 soundManager.play('turn_finished');
             }*/
         }
-        console.log("fieldState: ");
-        console.log(this.state.fieldState);
+        //console.log("fieldState: ");
+        //console.log(this.state.fieldState);
     },
 
     render: function(){
@@ -710,6 +742,8 @@ var GameField = React.createClass({
       function htmlField(){
         console.log("FIELD STATE:");
         console.log(self.state.fieldState);
+        console.log("moved:");
+        console.log(self.state.fieldState.moved);
         var result = [];
         var cnt=1;
         var framecnt=100;
@@ -728,6 +762,7 @@ var GameField = React.createClass({
           framecnt++;
         };
         var selected = "";
+        var previousTurnMarked = "";
         //верхняя рамка
         cornerFrame()
         horizontalFrame();
@@ -742,9 +777,15 @@ var GameField = React.createClass({
                 selected = "selected";
               }
             };
-            result.push(<div id={cnt} className={self.state.fieldState[i][j]+" "+((i+j) % 2 ? "white" : "black") + " " + selected} key={cnt}></div>);
+            if (self.state.lastOpponentTurn){
+              if (((self.state.lastOpponentTurn[0][0] == i) && (self.state.lastOpponentTurn[0][1] == j)) || ((self.state.lastOpponentTurn[1][0] == i) && (self.state.lastOpponentTurn[1][1] == j))){
+                previousTurnMarked = "previousTurnMarked";
+              }
+            };
+            result.push(<div id={cnt} className={self.state.fieldState[i][j]+" "+((i+j) % 2 ? "white" : "black") + " " + selected + " " + previousTurnMarked} key={cnt}></div>);
             cnt++;
             selected = "";
+            previousTurnMarked = "";
           }
           //боковая рамка
           verticalFrame(j+1);
