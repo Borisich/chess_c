@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var io = require('socket.io-client');
 
-const locally = true;
+const locally = false;
 if (locally) {
   var socket = io('http://localhost');
 } else {
@@ -586,13 +586,34 @@ var GameField = React.createClass({
         break;
       case "bishop_b":
       case "bishop_w":
-        var f = true;
-        if (Math.abs(placeToMove.i - selectedFigure.i) == Math.abs(placeToMove.j - selectedFigure.j)) {
+        /*var f = true;
+        if (Math.abs(placeToMove.i-selectedFigure.i) == Math.abs(placeToMove.j-selectedFigure.j)){
           var minJ = Math.min(selectedFigure.j, placeToMove.j);
           var maxJ = Math.max(selectedFigure.j, placeToMove.j);
           var minI = Math.min(selectedFigure.i, placeToMove.i);
           var maxI = Math.max(selectedFigure.i, placeToMove.i);
-          for (var j = minJ + 1, i = minI + 1; j < maxJ; j++, i++) {
+          for (var j = minJ+1, i = minI+1; j < maxJ; j++, i++) {
+            if (this.state.fieldState[i][j] != "empty"){
+              f = false;
+              break;
+            }
+          }
+          if (f){
+            if ((placeToMove.class == "empty") || opponentAttacked()){
+              result = true;
+            };
+          }
+        }*/
+        var f = true;
+        if (Math.abs(placeToMove.i - selectedFigure.i) == Math.abs(placeToMove.j - selectedFigure.j)) {
+          var i = selectedFigure.i;
+          var j = selectedFigure.j;
+          var di = (placeToMove.i - selectedFigure.i) / Math.abs(selectedFigure.i - placeToMove.i);
+          var dj = (placeToMove.j - selectedFigure.j) / Math.abs(selectedFigure.j - placeToMove.j);
+          //alert("i j di dj" + i + " "+ j + " "+ di + " "+ dj + " ");
+          for (var a = 0; a < Math.abs(selectedFigure.i - placeToMove.i) - 1; a++) {
+            i = i + di;
+            j = j + dj;
             if (this.state.fieldState[i][j] != "empty") {
               f = false;
               break;
@@ -612,15 +633,14 @@ var GameField = React.createClass({
         //Объединяем ладью и слона
         //Слон
         if (Math.abs(placeToMove.i - selectedFigure.i) == Math.abs(placeToMove.j - selectedFigure.j)) {
-          var minJ = Math.min(selectedFigure.j, placeToMove.j);
-          var maxJ = Math.max(selectedFigure.j, placeToMove.j);
-          var minI = Math.min(selectedFigure.i, placeToMove.i);
-          var maxI = Math.max(selectedFigure.i, placeToMove.i);
-          if (Math.abs(placeToMove.i - selectedFigure.i) == 0) {
-            f_b = false;
-            break;
-          }
-          for (var j = minJ + 1, i = minI + 1; j < maxJ; j++, i++) {
+          var i = selectedFigure.i;
+          var j = selectedFigure.j;
+          var di = (placeToMove.i - selectedFigure.i) / Math.abs(selectedFigure.i - placeToMove.i);
+          var dj = (placeToMove.j - selectedFigure.j) / Math.abs(selectedFigure.j - placeToMove.j);
+          //alert("i j di dj" + i + " "+ j + " "+ di + " "+ dj + " ");
+          for (var a = 0; a < Math.abs(selectedFigure.i - placeToMove.i) - 1; a++) {
+            i = i + di;
+            j = j + dj;
             if (this.state.fieldState[i][j] != "empty") {
               f_b = false;
               break;

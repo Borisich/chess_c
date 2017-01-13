@@ -1,6 +1,6 @@
 var io = require('socket.io-client');
 
-const locally = true;
+const locally = false;
 if (locally){
   var socket = io('http://localhost');
 } else {
