@@ -368,6 +368,8 @@ var GameField = React.createClass({
         case "pawn_w":
           if ((selectedFigure.i == placeToMove.i) && (selectedFigure.j == placeToMove.j-1) && (placeToMove.class == "empty")){
             result = true;
+            //в дамки
+            if (placeToMove.j == 7) result = "queen_w";
           };
           if ((selectedFigure.i == placeToMove.i) && (selectedFigure.j == placeToMove.j-2) && (placeToMove.class == "empty") && (selectedFigure.j == 1)){
             result = true;
@@ -375,11 +377,17 @@ var GameField = React.createClass({
           //поедание
           if (((selectedFigure.i == placeToMove.i+1) || (selectedFigure.i == placeToMove.i-1)) && (selectedFigure.j == placeToMove.j-1) && opponentAttacked()){
             result = true;
+            //в дамки
+            if (placeToMove.j == 7) result = "queen_w";
           };
+
+
           break;
         case "pawn_b":
           if ((selectedFigure.i == placeToMove.i) && (selectedFigure.j == placeToMove.j+1) && (placeToMove.class == "empty")){
             result = true;
+            //в дамки
+            if (placeToMove.j == 0) result = "queen_b";
           };
           if ((selectedFigure.i == placeToMove.i) && (selectedFigure.j == placeToMove.j+2) && (placeToMove.class == "empty") && (selectedFigure.j == 6)){
             result = true;
@@ -387,6 +395,8 @@ var GameField = React.createClass({
           //поедание
           if (((selectedFigure.i == placeToMove.i+1) || (selectedFigure.i == placeToMove.i-1)) && (selectedFigure.j == placeToMove.j+1) && opponentAttacked()){
             result = true;
+            //в дамки
+            if (placeToMove.j == 0) result = "queen_b";
           };
           break;
         case "rook_b":
@@ -643,30 +653,30 @@ var GameField = React.createClass({
           else{ //перемещаем фигуру
             var target = e.target;
             var placeToMove = this.getFieldStateById(target.id);
+            var turnPossibleResult = this.isTurnPossible(this.state.selectedFigure, placeToMove);
             //проверка возможности хода
-            if (this.isTurnPossible(this.state.selectedFigure, placeToMove)){
-              if (typeof(this.isTurnPossible(this.state.selectedFigure, placeToMove) == 'object')){
+            if (turnPossibleResult){
+              if (typeof(turnPossibleResult == 'object')){
                 //рокировка. Передвинем ладью
-                var rock = this.isTurnPossible(this.state.selectedFigure, placeToMove);
-                if ((rock.i == 6) && ((rock.j == 0))){
+                if ((turnPossibleResult.i == 6) && ((turnPossibleResult.j == 0))){
                   //белая правая
                   var tmp = this.state.fieldState;
                   tmp[7][0] = "empty";
                   tmp[5][0] = "rook_w";
                 }
-                if ((rock.i == 2) && ((rock.j == 0))){
+                if ((turnPossibleResult.i == 2) && ((turnPossibleResult.j == 0))){
                   //белая левая
                   var tmp = this.state.fieldState;
                   tmp[0][0] = "empty";
                   tmp[3][0] = "rook_w";
                 }
-                if ((rock.i == 6) && ((rock.j == 7))){
+                if ((turnPossibleResult.i == 6) && ((turnPossibleResult.j == 7))){
                   //белая левая
                   var tmp = this.state.fieldState;
                   tmp[7][7] = "empty";
                   tmp[5][7] = "rook_b";
                 }
-                if ((rock.i == 2) && ((rock.j == 7))){
+                if ((turnPossibleResult.i == 2) && ((turnPossibleResult.j == 7))){
                   //белая левая
                   var tmp = this.state.fieldState;
                   tmp[0][7] = "empty";
@@ -675,7 +685,16 @@ var GameField = React.createClass({
               }
               var tmp = this.state.fieldState;
               tmp[this.state.selectedFigure.i][this.state.selectedFigure.j] = "empty";
-              tmp[placeToMove.i][placeToMove.j] = this.state.selectedFigure.class;
+              if (turnPossibleResult == "queen_w")
+              {
+                tmp[placeToMove.i][placeToMove.j] = "queen_w";
+              }
+              else if (turnPossibleResult == "queen_b") {
+                tmp[placeToMove.i][placeToMove.j] = "queen_b";
+              }
+              else {
+                tmp[placeToMove.i][placeToMove.j] = this.state.selectedFigure.class;
+              }
               var i = this.state.selectedFigure.i;
               var j = this.state.selectedFigure.j;
               var tmp2 = this.state.moved;
