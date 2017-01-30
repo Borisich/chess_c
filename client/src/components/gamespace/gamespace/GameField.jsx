@@ -1,7 +1,7 @@
 
 var React = require('react');
-var socket = require('../../services/socket.js');
-var soundManager = require('../../sounds/sounds.js');
+var socket = require('../../../../services/socket.js');
+var soundManager = require('../../../../sounds/sounds.js');
 
 var StatusBar = require('./StatusBar.jsx');
 

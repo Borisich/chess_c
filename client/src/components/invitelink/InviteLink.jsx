@@ -1,7 +1,7 @@
 //компонент пригласительной ссылки
 var React = require('react');
 
-var socket = require('../../services/socket.js');
+var socket = require('../../../services/socket.js');
 
 var InviteLink = React.createClass({
     getInitialState: function () {

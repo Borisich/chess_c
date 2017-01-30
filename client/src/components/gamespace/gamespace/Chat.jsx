@@ -2,9 +2,9 @@
 var React = require('react');
 var Messages = require('./Messages.jsx');
 
-var socket = require('../../services/socket.js');
+var socket = require('../../../../services/socket.js');
 
-var soundManager = require('../../sounds/sounds.js');
+var soundManager = require('../../../../sounds/sounds.js');
 var Chat = React.createClass({
 
     getInitialState: function () {
