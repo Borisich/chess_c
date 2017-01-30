@@ -32,9 +32,10 @@
 .lostfigureframe {
   height: 50px;
 	width: 50px;
-  border: 1px solid black;
+  /*border: 1px solid black;*/
   display: inline-block;
   margin-top: -4px;
+  background-size: 50px;
 }
 #lostfiguresblack {
 	width: 160px;
