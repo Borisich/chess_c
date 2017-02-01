@@ -7,9 +7,7 @@ var GameField = require('./gamespace/GameField.jsx');
 
 var GameSpace = React.createClass({
   render: function(){
-    var LostFiguresDataBlack = {
-      side: 'black',
-      data: [
+    var lostFigures = [
             'pawn_b',
             'rook_b',
             'pawn_b',
@@ -23,34 +21,16 @@ var GameSpace = React.createClass({
             'pawn_b',
             'pawn_b',
             'pawn_b',
-            '',
-            '',
-            ]
-    };
-    var LostFiguresDataWhite = {
-      side: 'white',
-      data: [
-            'pawn_w',
-            'rook_w',
+            'pawn_b',
             'pawn_w',
             'pawn_w',
             'pawn_w',
             'pawn_w',
-            'pawn_w',
-            'pawn_w',
-            'pawn_w',
-            'pawn_w',
-            'pawn_w',
-            'pawn_w',
-            'pawn_w',
-            '',
-            '',
-            ]
-    };
+            ];
     return (
       <div>
         <div id="lostfiguresblack">
-          <LostFigures data={LostFiguresDataBlack.data} side={LostFiguresDataBlack.side}/>
+          <LostFigures lostFigures={lostFigures} side='black'/>
         </div>
         <div id="field">
           <GameField/>
@@ -59,7 +39,7 @@ var GameSpace = React.createClass({
           <Chat/>
         </div>
         <div id="lostfigureswhite">
-          <LostFigures data={LostFiguresDataWhite.data} side={LostFiguresDataWhite.side}/>
+          <LostFigures lostFigures={lostFigures} side='white'/>
         </div>
       </div>
     )
