@@ -62,20 +62,36 @@ var GameField = require('./gamespace/GameField.jsx');
 var GameSpace = React.createClass({
   displayName: 'GameSpace',
 
+  getInitialState: function () {
+    return {
+      lostFigures: ['pawn_b', 'rook_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_w', 'pawn_w', 'pawn_w', 'pawn_w']
+    };
+  },
+  componentDidMount: function () {
+    var self = this;
+    console.log("STATE SETTED");
+    console.log(self.state.lostFigures);
+  },
+  addLostFigure: function (figure) {
+    var tmp = this.state.lostFigures;
+    tmp.push(figure);
+    this.setState({
+      lostFigures: tmp
+    });
+  },
   render: function () {
-    var lostFigures = ['pawn_b', 'rook_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_w', 'pawn_w', 'pawn_w', 'pawn_w'];
     return React.createElement(
       'div',
       null,
       React.createElement(
         'div',
         { id: 'lostfiguresblack' },
-        React.createElement(LostFigures, { lostFigures: lostFigures, side: 'black' })
+        React.createElement(LostFigures, { lostFigures: this.state.lostFigures, side: 'black' })
       ),
       React.createElement(
         'div',
         { id: 'field' },
-        React.createElement(GameField, null)
+        React.createElement(GameField, { addLostFigure: this.addLostFigure })
       ),
       React.createElement(
         'div',
@@ -85,7 +101,7 @@ var GameSpace = React.createClass({
       React.createElement(
         'div',
         { id: 'lostfigureswhite' },
-        React.createElement(LostFigures, { lostFigures: lostFigures, side: 'white' })
+        React.createElement(LostFigures, { lostFigures: this.state.lostFigures, side: 'white' })
       )
     );
   }
@@ -861,6 +877,13 @@ var GameField = React.createClass({
               tmp[3][7] = "rook_b";
             }
           }
+          //Если съели кого-то, то перенесем эту фигуру в зону съеденных
+          var lostFigure = null;
+          if (placeToMove.class != "empty") {
+            lostFigure = placeToMove.class;
+            this.props.addLostFigure(lostFigure);
+          }
+
           var tmp = this.state.fieldState;
           tmp[this.state.selectedFigure.i][this.state.selectedFigure.j] = "empty";
           if (turnPossibleResult == "queen_w") {
@@ -1044,7 +1067,7 @@ var LostFigures = React.createClass({
   getInitialState: function () {
     return {
       shown: false,
-      lostFigures: []
+      lostFigures: this.props.lostFigures
     };
   },
   componentDidMount: function () {
@@ -1056,8 +1079,7 @@ var LostFigures = React.createClass({
 
     socket.on('game status', function (data) {
       self.setState({
-        shown: true,
-        lostFigures: data.lostFigures
+        shown: true
       });
     });
   },
@@ -1067,6 +1089,11 @@ var LostFigures = React.createClass({
     return false;
   },
   render: function () {
+    console.log("PROPS:");
+    console.log(this.props.lostFigures);
+    console.log("STATE:");
+    console.log(this.state.lostFigures);
+
     if (this.state.shown) {
       var reorderedFigures = [];
       if (this.props.side == 'black') {

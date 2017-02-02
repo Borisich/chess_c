@@ -683,6 +683,13 @@ var GameField = React.createClass({
                   tmp[3][7] = "rook_b";
                 }
               }
+              //Если съели кого-то, то перенесем эту фигуру в зону съеденных
+              var lostFigure = null;
+              if (placeToMove.class != "empty"){
+                lostFigure = placeToMove.class;
+                this.props.addLostFigure(lostFigure);
+              }
+
               var tmp = this.state.fieldState;
               tmp[this.state.selectedFigure.i][this.state.selectedFigure.j] = "empty";
               if (turnPossibleResult == "queen_w")

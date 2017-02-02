@@ -6,40 +6,56 @@ var LostFigures = require('./gamespace/LostFigures.jsx');
 var GameField = require('./gamespace/GameField.jsx');
 
 var GameSpace = React.createClass({
+  getInitialState: function () {
+      return {
+        lostFigures: [
+                'pawn_b',
+                'rook_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_b',
+                'pawn_w',
+                'pawn_w',
+                'pawn_w',
+                'pawn_w',
+                ]
+      };
+  },
+  componentDidMount: function () {
+      var self = this;
+      console.log("STATE SETTED");
+      console.log(self.state.lostFigures);
+  },
+  addLostFigure: function (figure){
+    var tmp = this.state.lostFigures;
+    tmp.push(figure);
+    this.setState({
+      lostFigures: tmp
+    });
+  },
   render: function(){
-    var lostFigures = [
-            'pawn_b',
-            'rook_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_b',
-            'pawn_w',
-            'pawn_w',
-            'pawn_w',
-            'pawn_w',
-            ];
     return (
       <div>
         <div id="lostfiguresblack">
-          <LostFigures lostFigures={lostFigures} side='black'/>
+          <LostFigures  lostFigures={this.state.lostFigures} side='black'/>
         </div>
         <div id="field">
-          <GameField/>
+          <GameField addLostFigure={this.addLostFigure}/>
         </div>
         <div id="chat">
           <Chat/>
         </div>
         <div id="lostfigureswhite">
-          <LostFigures lostFigures={lostFigures} side='white'/>
+          <LostFigures lostFigures={this.state.lostFigures} side='white'/>
         </div>
       </div>
     )

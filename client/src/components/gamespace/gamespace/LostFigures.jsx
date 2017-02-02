@@ -7,7 +7,7 @@ var LostFigures = React.createClass({
   getInitialState: function () {
     return {
         shown: false,
-        lostFigures: []
+        lostFigures: this.props.lostFigures
     };
   },
   componentDidMount: function () {
@@ -20,7 +20,7 @@ var LostFigures = React.createClass({
     socket.on('game status', function (data) {
       self.setState({
           shown: true,
-          lostFigures: data.lostFigures
+          /*lostFigures: data.lostFigures*/
       });
     });
   },
@@ -30,6 +30,11 @@ var LostFigures = React.createClass({
     return false;
   },
   render: function(){
+    console.log("PROPS:");
+    console.log(this.props.lostFigures);
+    console.log("STATE:");
+    console.log(this.state.lostFigures);
+
     if (this.state.shown){
       var reorderedFigures= [];
       if (this.props.side == 'black'){
