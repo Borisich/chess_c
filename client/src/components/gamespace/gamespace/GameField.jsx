@@ -730,7 +730,7 @@ var GameField = React.createClass({
                 [this.state.selectedFigure.i,this.state.selectedFigure.j],
                 [placeToMove.i,placeToMove.j]
               ];
-              socket.emit('turn done',{playerNumber: this.state.myNumber, field: this.state.fieldState, moved: this.state.moved, turnContent: turnContent});
+              socket.emit('turn done',{playerNumber: this.state.myNumber, field: this.state.fieldState, moved: this.state.moved, turnContent: turnContent, lostFigure: lostFigure});
               soundManager.play('turn_finished');
 
               this.setState({

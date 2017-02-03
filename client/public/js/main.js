@@ -58,25 +58,57 @@ var React = require('react');
 var Chat = require('./gamespace/Chat.jsx');
 var LostFigures = require('./gamespace/LostFigures.jsx');
 var GameField = require('./gamespace/GameField.jsx');
+var socket = require('../../../services/socket.js');
 
 var GameSpace = React.createClass({
   displayName: 'GameSpace',
 
   getInitialState: function () {
     return {
-      lostFigures: ['pawn_b', 'rook_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_b', 'pawn_w', 'pawn_w', 'pawn_w', 'pawn_w']
+      lostFigures: {
+        figures: [],
+        lastMarkedWhite: false,
+        lastMarkedBlack: false
+      }
     };
   },
   componentDidMount: function () {
     var self = this;
-    console.log("STATE SETTED");
-    console.log(self.state.lostFigures);
+    /*this.setState({
+      shown: true,
+      lostFigures: this.props.lostFigures
+    });*/
+
+    socket.on('game status', function (data) {
+      var lostFigures = [];
+      if (data.lostFigures.figures) {
+        lostFigures = data.lostFigures.figures;
+      }
+      self.setState({
+        lostFigures: {
+          figures: lostFigures,
+          lastMarkedWhite: data.lostFigures.lastMarkedWhite,
+          lastMarkedBlack: data.lostFigures.lastMarkedBlack
+        }
+      });
+    });
   },
+  /*componentDidMount: function () {
+      var self = this;
+      console.log("STATE SETTED");
+      console.log(self.state.lostFigures);
+  },*/
   addLostFigure: function (figure) {
-    var tmp = this.state.lostFigures;
+    var tmp = this.state.lostFigures.figures;
+    var lmw = this.state.lostFigures.lastMarkedWhite;
+    var lmb = this.state.lostFigures.lastMarkedBlack;
     tmp.push(figure);
     this.setState({
-      lostFigures: tmp
+      lostFigures: {
+        figures: tmp,
+        lastMarkedWhite: lmw,
+        lastMarkedBlack: lmb
+      }
     });
   },
   render: function () {
@@ -86,7 +118,7 @@ var GameSpace = React.createClass({
       React.createElement(
         'div',
         { id: 'lostfiguresblack' },
-        React.createElement(LostFigures, { lostFigures: this.state.lostFigures, side: 'black' })
+        React.createElement(LostFigures, { lostFigures: this.state.lostFigures.figures, lastMarked: this.state.lostFigures.lastMarkedBlack, side: 'black' })
       ),
       React.createElement(
         'div',
@@ -101,7 +133,7 @@ var GameSpace = React.createClass({
       React.createElement(
         'div',
         { id: 'lostfigureswhite' },
-        React.createElement(LostFigures, { lostFigures: this.state.lostFigures, side: 'white' })
+        React.createElement(LostFigures, { lostFigures: this.state.lostFigures.figures, lastMarked: this.state.lostFigures.lastMarkedWhite, side: 'white' })
       )
     );
   }
@@ -109,7 +141,7 @@ var GameSpace = React.createClass({
 
 module.exports = GameSpace;
 
-},{"./gamespace/Chat.jsx":4,"./gamespace/GameField.jsx":5,"./gamespace/LostFigures.jsx":6,"react":193}],4:[function(require,module,exports){
+},{"../../../services/socket.js":1,"./gamespace/Chat.jsx":4,"./gamespace/GameField.jsx":5,"./gamespace/LostFigures.jsx":6,"react":193}],4:[function(require,module,exports){
 //компонент чата
 var React = require('react');
 var Messages = require('./Messages.jsx');
@@ -917,7 +949,7 @@ var GameField = React.createClass({
 
           //отправить свой ход на сервер
           var turnContent = [[this.state.selectedFigure.i, this.state.selectedFigure.j], [placeToMove.i, placeToMove.j]];
-          socket.emit('turn done', { playerNumber: this.state.myNumber, field: this.state.fieldState, moved: this.state.moved, turnContent: turnContent });
+          socket.emit('turn done', { playerNumber: this.state.myNumber, field: this.state.fieldState, moved: this.state.moved, turnContent: turnContent, lostFigure: lostFigure });
           soundManager.play('turn_finished');
 
           this.setState({
@@ -1066,18 +1098,12 @@ var LostFigures = React.createClass({
 
   getInitialState: function () {
     return {
-      shown: false,
-      lostFigures: this.props.lostFigures
+      shown: false
     };
   },
   componentDidMount: function () {
     var self = this;
-    this.setState({
-      shown: true,
-      lostFigures: this.props.lostFigures
-    });
-
-    socket.on('game status', function (data) {
+    socket.on('game status', function () {
       self.setState({
         shown: true
       });
@@ -1089,25 +1115,37 @@ var LostFigures = React.createClass({
     return false;
   },
   render: function () {
-    console.log("PROPS:");
+    /*console.log("PROPS:");
     console.log(this.props.lostFigures);
     console.log("STATE:");
-    console.log(this.state.lostFigures);
+    console.log(this.state.lostFigures);*/
 
     if (this.state.shown) {
+      var lostFigures = this.props.lostFigures;
+
+      var lastIndexWhite = 0;
+      var lastIndexBlack = 0;
+      for (var i = 0; i < lostFigures.length; i++) {
+        if (this.whatSideIsFigure(lostFigures[i]) == "black") lastIndexBlack = i;
+        if (this.whatSideIsFigure(lostFigures[i]) == "white") lastIndexWhite = i;
+      }
+
       var reorderedFigures = [];
       if (this.props.side == 'black') {
         var k = 0;
-        for (var i = 0; i < this.state.lostFigures.length; i++) {
-          if (this.whatSideIsFigure(this.state.lostFigures[i]) == "black") {
+        for (var i = 0; i < lostFigures.length; i++) {
+          if (this.whatSideIsFigure(lostFigures[i]) == "black") {
             if (k < 5) {
-              reorderedFigures[3 * k + 2] = this.state.lostFigures[i];
+              reorderedFigures[3 * k + 2] = lostFigures[i];
+              if (i == lastIndexBlack) lastIndexBlack = 3 * k + 2;
             }
             if (k > 4 && k < 10) {
-              reorderedFigures[3 * k - 14] = this.state.lostFigures[i];
+              reorderedFigures[3 * k - 14] = lostFigures[i];
+              if (i == lastIndexBlack) lastIndexBlack = 3 * k - 14;
             }
             if (k > 9) {
-              reorderedFigures[3 * k - 30] = this.state.lostFigures[i];
+              reorderedFigures[3 * k - 30] = lostFigures[i];
+              if (i == lastIndexBlack) lastIndexBlack = 3 * k - 30;
             }
             k++;
           }
@@ -1116,24 +1154,33 @@ var LostFigures = React.createClass({
 
       if (this.props.side == 'white') {
         var k = 0;
-        for (var i = 0; i < this.state.lostFigures.length; i++) {
-          if (this.whatSideIsFigure(this.state.lostFigures[i]) == "white") {
+        for (var i = 0; i < lostFigures.length; i++) {
+          if (this.whatSideIsFigure(lostFigures[i]) == "white") {
             if (k < 5) {
-              reorderedFigures[12 - 3 * k] = this.state.lostFigures[i];
+              reorderedFigures[12 - 3 * k] = lostFigures[i];
+              if (i == lastIndexWhite) lastIndexWhite = 12 - 3 * k;
             }
             if (k > 4 && k < 10) {
-              reorderedFigures[28 - 3 * k] = this.state.lostFigures[i];
+              reorderedFigures[28 - 3 * k] = lostFigures[i];
+              if (i == lastIndexWhite) lastIndexWhite = 28 - 3 * k;
             }
             if (k > 9) {
-              reorderedFigures[44 - 3 * k] = this.state.lostFigures[i];
+              reorderedFigures[44 - 3 * k] = lostFigures[i];
+              if (i == lastIndexWhite) lastIndexWhite = 44 - 3 * k;
             }
             k++;
           }
         }
       }
       var divArray = [];
+      var cls = "";
+      var markedClass = "";
       for (var i = 0; i < 15; i++) {
-        var cls = "lostfigureframe " + reorderedFigures[i];
+        if (this.props.lastMarked && (this.props.side == "black" && i == lastIndexBlack || this.props.side == "white" && i == lastIndexWhite)) {
+          markedClass = "lostFigureMarked ";
+        }
+        cls = "lostfigureframe " + markedClass + reorderedFigures[i];
+        markedClass = "";
         divArray.push(React.createElement('div', { className: cls, key: i }));
       }
       return React.createElement(
