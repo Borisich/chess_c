@@ -91,6 +91,7 @@ var GameField = React.createClass({
             moved: {},
             lastOpponentTurn: null,
             myTurn: true,
+            frameColorClass: "framecolormyturn",
             selectedFigure: {
               selected: false,
               i: undefined,
@@ -174,6 +175,15 @@ var GameField = React.createClass({
         //отображение текущего положения дел
         console.log("received field state: ");
         console.log(gameData.field);
+
+        var tmp = "";
+        gameData.nowTurn ? tmp = "framecolormyturn" : tmp = "framecolornotmyturn";
+        if (self.isCheck(gameData.field)){
+          tmp = "framecolorcheck";
+        }
+        self.setState({
+          frameColorClass: tmp
+        });
         self.setState({myTurn: gameData.nowTurn, myNumber: gameData.playerNumber, fieldState: gameData.field, moved: gameData.moved, lastOpponentTurn: gameData.lastOpponentTurn});
         if (gameData.nowTurn) {
           soundManager.play('my_turn');
@@ -340,6 +350,222 @@ var GameField = React.createClass({
       }
       return result;
     },
+    isZoneUnderAttack: function(fieldState, zone, myNumber){
+      //zone - объект. {i: ..., j: ....}
+      var self = this;
+      var ending = "";
+      if (myNumber == 1){
+        ending = "_b"
+      }
+      else if (myNumber == 2){
+        ending = "_w"
+      }
+      var hypoteticPawnCoords = null;
+      //атакует ли черная пешка?
+      if (myNumber == 1) {
+        hypoteticPawnCoords = {
+          i: zone.i-1,
+          j: zone.j+1
+        };
+        if ((hypoteticPawnCoords.i >= 0) && (hypoteticPawnCoords.j <= 7)){
+          if (fieldState[hypoteticPawnCoords.i][hypoteticPawnCoords.j] == "pawn_b") return true
+        }
+
+        hypoteticPawnCoords = {
+          i: zone.i+1,
+          j: zone.j+1
+        };
+        if ((hypoteticPawnCoords.i <= 7) && (hypoteticPawnCoords.j <= 7)){
+          if (fieldState[hypoteticPawnCoords.i][hypoteticPawnCoords.j] == "pawn_b") return true
+        }
+      }
+      //атакует ли белая пешка?
+      if (myNumber == 2) {
+        hypoteticPawnCoords = {
+          i: zone.i-1,
+          j: zone.j-1
+        };
+        if ((hypoteticPawnCoords.i >= 0) && (hypoteticPawnCoords.j <= 7)){
+          if (fieldState[hypoteticPawnCoords.i][hypoteticPawnCoords.j] == "pawn_w") return true
+        }
+
+        hypoteticPawnCoords = {
+          i: zone.i+1,
+          j: zone.j-1
+        };
+        if ((hypoteticPawnCoords.i <= 7) && (hypoteticPawnCoords.j <= 7)){
+          if (fieldState[hypoteticPawnCoords.i][hypoteticPawnCoords.j] == "pawn_w") return true
+        }
+      }
+
+      //атакует ли ладья или ферзь?
+      for (var i = zone.i-1; i >= 0; i--){
+        if ((fieldState[i][zone.j] != "empty") && (fieldState[i][zone.j] != "rook"+ending) && (fieldState[i][zone.j] != "queen"+ending)){
+          //если другая фигура
+          break;
+        }
+        if ((fieldState[i][zone.j] == "rook"+ending) || (fieldState[i][zone.j] == "queen"+ending)) return true;
+      }
+      for (var i = zone.i+1; i <= 7; i++){
+        if ((fieldState[i][zone.j] != "empty") && (fieldState[i][zone.j] != "rook"+ending) && (fieldState[i][zone.j] != "queen"+ending)){
+          //если другая фигура
+          break;
+        }
+        if ((fieldState[i][zone.j] == "rook"+ending) || (fieldState[i][zone.j] == "queen"+ending)) return true;
+      }
+      for (var j = zone.j-1; j >= 0; j--){
+        if ((fieldState[zone.i][j] != "empty") && (fieldState[zone.i][j] != "rook"+ending) && (fieldState[zone.i][j] != "queen"+ending)){
+          //если другая фигура
+          break;
+        }
+        if ((fieldState[zone.i][j] == "rook"+ending) || (fieldState[zone.i][j] == "queen"+ending)) return true;
+      }
+      for (var j = zone.j+1; j <= 7; j++){
+        if ((fieldState[zone.i][j] != "empty") && (fieldState[zone.i][j] != "rook"+ending) && (fieldState[zone.i][j] != "queen"+ending)){
+          //если другая фигура
+          break;
+        }
+        if ((fieldState[zone.i][j] == "rook"+ending) || (fieldState[zone.i][j] == "queen"+ending)) return true;
+      }
+
+      //атакует ли слон или ферзь?
+      for (var i = zone.i-1, j = zone.j+1; ((i >= 0) && (j <= 7)); i--, j++){
+        if ((fieldState[i][j] != "empty") && (fieldState[i][j] != "bishop"+ending) && (fieldState[i][j] != "queen"+ending)){
+          //если другая фигура
+          break;
+        }
+        if ((fieldState[i][j] == "bishop"+ending) || (fieldState[i][j] == "queen"+ending)) return true;
+      }
+      for (var i = zone.i+1, j = zone.j+1; ((i <= 7) && (j <= 7)); i++, j++){
+        if ((fieldState[i][j] != "empty") && (fieldState[i][j] != "bishop"+ending) && (fieldState[i][j] != "queen"+ending)){
+          //если другая фигура
+          break;
+        }
+        if ((fieldState[i][j] == "bishop"+ending) || (fieldState[i][j] == "queen"+ending)) return true;
+      }
+      for (var i = zone.i+1, j = zone.j-1; ((i <= 7) && (j >= 0)); i++, j--){
+        if ((fieldState[i][j] != "empty") && (fieldState[i][j] != "bishop"+ending) && (fieldState[i][j] != "queen"+ending)){
+          //если другая фигура
+          break;
+        }
+        if ((fieldState[i][j] == "bishop"+ending) || (fieldState[i][j] == "queen"+ending)) return true;
+      }
+      for (var i = zone.i-1, j = zone.j-1; ((i >= 0) && (j >= 0)); i--, j--){
+        if ((fieldState[i][j] != "empty") && (fieldState[i][j] != "bishop"+ending) && (fieldState[i][j] != "queen"+ending)){
+          //если другая фигура
+          break;
+        }
+        if ((fieldState[i][j] == "bishop"+ending) || (fieldState[i][j] == "queen"+ending)) return true;
+      }
+
+      //атакует ли конь?
+      var hypoteticKnightCoords = [
+      {
+        i: zone.i+1,
+        j: zone.j+2
+      },
+      {
+        i: zone.i+2,
+        j: zone.j+1
+      },
+      {
+        i: zone.i+2,
+        j: zone.j-1
+      },
+      {
+        i: zone.i+1,
+        j: zone.j-2
+      },
+      {
+        i: zone.i-1,
+        j: zone.j-2
+      },
+      {
+        i: zone.i-2,
+        j: zone.j-1
+      },
+      {
+        i: zone.i-2,
+        j: zone.j+1
+      },
+      {
+        i: zone.i-1,
+        j: zone.j+2
+      }]
+      for (var i=0; i<hypoteticKnightCoords.length; i++){
+        if ((hypoteticKnightCoords[i].i <= 7) && (hypoteticKnightCoords[i].i >= 0) && (hypoteticKnightCoords[i].j <= 7) && (hypoteticKnightCoords[i].j >= 0)) {
+          if (fieldState[hypoteticKnightCoords[i].i][hypoteticKnightCoords[i].j] == "knight"+ending) return true
+        }
+      }
+
+      //атакует ли черный король?
+      var hypoteticKingCoords = [
+      {
+        i: zone.i-1,
+        j: zone.j+1
+      },
+      {
+        i: zone.i+0,
+        j: zone.j+1
+      },
+      {
+        i: zone.i+1,
+        j: zone.j+1
+      },
+      {
+        i: zone.i+1,
+        j: zone.j+0
+      },
+      {
+        i: zone.i+1,
+        j: zone.j-1
+      },
+      {
+        i: zone.i-0,
+        j: zone.j-1
+      },
+      {
+        i: zone.i-1,
+        j: zone.j-1
+      },
+      {
+        i: zone.i-1,
+        j: zone.j+0
+      }]
+      for (var i=0; i<hypoteticKingCoords.length; i++){
+        if ((hypoteticKingCoords[i].i <= 7) && (hypoteticKingCoords[i].i >= 0) && (hypoteticKingCoords[i].j <= 7) && (hypoteticKingCoords[i].j >= 0)) {
+          if (fieldState[hypoteticKingCoords[i].i][hypoteticKingCoords[i].j] == "king"+ending) return true
+        }
+      }
+
+      return false;
+    },
+
+    isCheck: function(fieldState){
+      var self = this;
+      var ending = "";
+      if (this.state.myNumber == 1){
+        ending = "_w"
+      }
+      else if (this.state.myNumber == 2){
+        ending = "_b"
+      }
+      //находим координаты короля
+      var king_Coords = {};
+      for (var i=0; i<self.state.fieldState.length; i++){
+        for (var j=0; j<self.state.fieldState[i].length; j++){
+          if (fieldState[i][j] == "king"+ending){
+            king_Coords = {
+              i: i,
+              j: j
+            }
+            break;
+          }
+        }
+      }
+      return this.isZoneUnderAttack(fieldState, king_Coords, this.state.myNumber)
+    },
+
     isTurnPossible: function(selectedFigure, placeToMove){
       var result = false;
       var opponentAttacked = function(){
@@ -630,10 +856,19 @@ var GameField = React.createClass({
         default:
          result = false;
       }
-      return result;
+      if (result == true){
+        //проверим, не возникает ли нам шах при таком ходе
+
+      }
+      return (result);
     },
     clickHandler: function(e){
         //var self = this;
+        var cloneObject = function(obj){
+          var res = {};
+          res = JSON.parse(JSON.stringify(obj));
+          return res;
+        };
         if (this.state.myTurn){
           if (!this.state.selectedFigure.selected){ //Выделяем фигуру
             var target = e.target;
@@ -654,33 +889,30 @@ var GameField = React.createClass({
             var target = e.target;
             var placeToMove = this.getFieldStateById(target.id);
             var turnPossibleResult = this.isTurnPossible(this.state.selectedFigure, placeToMove);
+            var tmpFieldState = cloneObject(this.state.fieldState);
             //проверка возможности хода
             if (turnPossibleResult){
               if (typeof(turnPossibleResult == 'object')){
                 //рокировка. Передвинем ладью
                 if ((turnPossibleResult.i == 6) && ((turnPossibleResult.j == 0))){
                   //белая правая
-                  var tmp = this.state.fieldState;
-                  tmp[7][0] = "empty";
-                  tmp[5][0] = "rook_w";
+                  tmpFieldState[7][0] = "empty";
+                  tmpFieldState[5][0] = "rook_w";
                 }
                 if ((turnPossibleResult.i == 2) && ((turnPossibleResult.j == 0))){
                   //белая левая
-                  var tmp = this.state.fieldState;
-                  tmp[0][0] = "empty";
-                  tmp[3][0] = "rook_w";
+                  tmpFieldState[0][0] = "empty";
+                  tmpFieldState[3][0] = "rook_w";
                 }
                 if ((turnPossibleResult.i == 6) && ((turnPossibleResult.j == 7))){
                   //белая левая
-                  var tmp = this.state.fieldState;
-                  tmp[7][7] = "empty";
-                  tmp[5][7] = "rook_b";
+                  tmpFieldState[7][7] = "empty";
+                  tmpFieldState[5][7] = "rook_b";
                 }
                 if ((turnPossibleResult.i == 2) && ((turnPossibleResult.j == 7))){
                   //белая левая
-                  var tmp = this.state.fieldState;
-                  tmp[0][7] = "empty";
-                  tmp[3][7] = "rook_b";
+                  tmpFieldState[0][7] = "empty";
+                  tmpFieldState[3][7] = "rook_b";
                 }
               }
               //Если съели кого-то, то перенесем эту фигуру в зону съеденных
@@ -690,17 +922,17 @@ var GameField = React.createClass({
                 this.props.addLostFigure(lostFigure);
               }
 
-              var tmp = this.state.fieldState;
-              tmp[this.state.selectedFigure.i][this.state.selectedFigure.j] = "empty";
+              tmpFieldState[this.state.selectedFigure.i][this.state.selectedFigure.j] = "empty";
+
               if (turnPossibleResult == "queen_w")
               {
-                tmp[placeToMove.i][placeToMove.j] = "queen_w";
+                tmpFieldState[placeToMove.i][placeToMove.j] = "queen_w";
               }
               else if (turnPossibleResult == "queen_b") {
-                tmp[placeToMove.i][placeToMove.j] = "queen_b";
+                tmpFieldState[placeToMove.i][placeToMove.j] = "queen_b";
               }
               else {
-                tmp[placeToMove.i][placeToMove.j] = this.state.selectedFigure.class;
+                tmpFieldState[placeToMove.i][placeToMove.j] = this.state.selectedFigure.class;
               }
               var i = this.state.selectedFigure.i;
               var j = this.state.selectedFigure.j;
@@ -723,32 +955,52 @@ var GameField = React.createClass({
               if((i==7) && (j==7)){
                 tmp2.rook_b_r = true;
               }
+              if (!this.isCheck(tmpFieldState)){
+                //отправить свой ход на сервер
+                var turnContent = [
+                  [this.state.selectedFigure.i,this.state.selectedFigure.j],
+                  [placeToMove.i,placeToMove.j]
+                ];
+                socket.emit('turn done',{playerNumber: this.state.myNumber, field: tmpFieldState, moved: this.state.moved, turnContent: turnContent, lostFigure: lostFigure});
+                soundManager.play('turn_finished');
 
-
-              //отправить свой ход на сервер
-              var turnContent = [
-                [this.state.selectedFigure.i,this.state.selectedFigure.j],
-                [placeToMove.i,placeToMove.j]
-              ];
-              socket.emit('turn done',{playerNumber: this.state.myNumber, field: this.state.fieldState, moved: this.state.moved, turnContent: turnContent, lostFigure: lostFigure});
-              soundManager.play('turn_finished');
-
-              this.setState({
-                myTurn: false,
-                fieldState: tmp,
-                moved: tmp2,
-                selectedFigure: {
-                  selected: false,
-                  i: undefined,
-                  j: undefined,
-                  class: undefined
+                this.setState({
+                  myTurn: false,
+                  frameColorClass: "framecolornotmyturn",
+                  fieldState: tmpFieldState,
+                  moved: tmp2,
+                  selectedFigure: {
+                    selected: false,
+                    i: undefined,
+                    j: undefined,
+                    class: undefined
+                  }
+                });
+              }
+              else{
+                var self = this;
+                var tmp = self.state.frameColorClass;
+                var func = function(){
+                  self.setState({
+                    frameColorClass: tmp
+                  })
                 }
-              });
+                setTimeout(func, 1000);
+                this.setState({
+                  frameColorClass: "framecolorcheck",
+                  statusText: "Король в опасности!"
+                });
+
+
+              }
+
+
             }
             else{
               //Снять выделение
               if ((this.state.selectedFigure.i == placeToMove.i) && (this.state.selectedFigure.j == placeToMove.j)){
                 this.setState({
+                  statusText: "Ваш ход!",
                   selectedFigure: {
                     selected: false,
                     i: undefined,
@@ -793,18 +1045,23 @@ var GameField = React.createClass({
         var result = [];
         var cnt=1;
         var framecnt=100;
+        /*var frameColorClass = self.state.myTurn ? "framecolormyturn" : "framecolornotmyturn";
+        if (self.isCheck(self.state.fieldState)){
+          //alert("check!");
+          frameColorClass = "framecolorcheck";
+        };*/
         function horizontalFrame(){
           for (var i=0; i<self.state.fieldState[0].length; i++){
-            result.push(<div id={framecnt} className="horizontframe" key={framecnt}>{String.fromCharCode(i+65)}</div>);
+            result.push(<div id={framecnt} className={"horizontframe " + self.state.frameColorClass} key={framecnt}>{String.fromCharCode(i+65)}</div>);
             framecnt++;
           }
         };
         function verticalFrame(j){
-          result.push(<div id={framecnt} className="verticalframe" key={framecnt}>{j}</div>);
+          result.push(<div id={framecnt} className={"verticalframe " + self.state.frameColorClass} key={framecnt}>{j}</div>);
           framecnt++;
         };
         function cornerFrame(){
-          result.push(<div id={framecnt} className="cornerframe" key={framecnt}></div>);
+          result.push(<div id={framecnt} className={"cornerframe " + self.state.frameColorClass} key={framecnt}></div>);
           framecnt++;
         };
         var selected = "";

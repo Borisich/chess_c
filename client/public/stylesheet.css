@@ -12,7 +12,9 @@
 }
 #gamespace {
     width: 1250px;
+    height: 1000px;
     margin: 0 auto;
+    position: relative;;
 
 }
 
@@ -27,6 +29,7 @@
     width: 200px;
     height: 550px;
     float: right;
+    overflow: auto;
 }
 
 .lostfigureframe {
@@ -42,8 +45,11 @@
   float: left;
 }
 #lostfigureswhite {
+  margin-left: 10px;
 	width: 160px;
   display: inline-block;
+  position:absolute;
+  bottom: 150px;
 }
 /**{
   border: 1px solid black;
@@ -60,8 +66,14 @@
   background-size:100px;
 
 }
-.cornerframe,.horizontframe,.verticalframe {
+.framecolormyturn{
   background-color: #FFE4C4;
+}
+.framecolornotmyturn{
+  background-color: #DCDCDA;
+}
+.framecolorcheck{
+  background-color: #FF2400;
 }
 .cornerframe {
   height: 30px;
