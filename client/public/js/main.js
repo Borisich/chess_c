@@ -1608,7 +1608,13 @@ var InviteLink = React.createClass({
                 //alert("REDIRECTING");
                 if (window.location.href + window.location.search != self.state.link + "1") {
                     //alert("REDIR "+self.state.link + "1");
-                    window.location.replace(self.state.link + "1");
+                    socket.disconnect();
+                    //небольшая задержка
+                    var delReplace = function () {
+                        window.location.replace(self.state.link + "1");
+                    };
+                    setTimeout(delReplace, 2000);
+                    //window.location.replace(self.state.link + "1");
                 }
             }
             self.setState({
