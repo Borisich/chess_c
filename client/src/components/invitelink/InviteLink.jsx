@@ -60,7 +60,7 @@ var InviteLink = React.createClass({
             });
         });
 
-        socket.once('game status', function () {
+        /*socket.once('game status', function () {
             console.log("Игра началась");
             //alert("Игра началась");
             if (self.state.link){ //если не игрок 2
@@ -79,8 +79,16 @@ var InviteLink = React.createClass({
             self.setState({
                 shown: false
             });
+        });*/
+        socket.once('game status', function () {
+            //alert("Игра началась");
+            if (self.state.link){ //если не игрок 2
+              if((window.location.href + window.location.search) != (self.state.link + "1")){
+                socket.disconnect();
+                window.location.replace(self.state.link + "1");
+              }
+            }
         });
-
     },
 
     render: function(){

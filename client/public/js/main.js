@@ -1600,26 +1600,35 @@ var InviteLink = React.createClass({
             });
         });
 
-        socket.once('game status', function () {
+        /*socket.once('game status', function () {
             console.log("Игра началась");
             //alert("Игра началась");
-            if (self.state.link) {
-                //если не игрок 2
-                //alert("REDIRECTING");
-                if (window.location.href + window.location.search != self.state.link + "1") {
-                    //alert("REDIR "+self.state.link + "1");
-                    socket.disconnect();
-                    //небольшая задержка
-                    var delReplace = function () {
-                        window.location.replace(self.state.link + "1");
-                    };
-                    setTimeout(delReplace, 2000);
-                    //window.location.replace(self.state.link + "1");
+            if (self.state.link){ //если не игрок 2
+              //alert("REDIRECTING");
+              if((window.location.href + window.location.search) != (self.state.link + "1")){
+                //alert("REDIR "+self.state.link + "1");
+                socket.disconnect();
+                //небольшая задержка
+                var delReplace = function(){
+                  window.location.replace(self.state.link + "1");
                 }
+                setTimeout(delReplace, 2000);
+                //window.location.replace(self.state.link + "1");
+              }
             }
             self.setState({
                 shown: false
             });
+        });*/
+        socket.once('game status', function () {
+            //alert("Игра началась");
+            if (self.state.link) {
+                //если не игрок 2
+                if (window.location.href + window.location.search != self.state.link + "1") {
+                    socket.disconnect();
+                    window.location.replace(self.state.link + "1");
+                }
+            }
         });
     },
 
