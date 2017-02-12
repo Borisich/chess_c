@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var io = require('socket.io-client');
 
-const locally = false;
+const locally = true;
 if (locally) {
   var socket = io('http://localhost');
 } else {
@@ -301,7 +301,7 @@ var GameField = React.createClass({
       result[7][7] = "rook_b";
       result[7][7].moved = false;
 
-      console.log(result);
+      //console.log(result);
       return result;
     };
     function getInitialFieldState1() {
@@ -314,7 +314,7 @@ var GameField = React.createClass({
           result[i][j] = "empty";
         }
       }
-      console.log(result);
+      //  console.log(result);
       return result;
     };
 
@@ -404,50 +404,31 @@ var GameField = React.createClass({
   addGameStatusListener: function () {
     var self = this;
     socket.on('game status', function (gameData) {
-
-      var newStateParams = {
-        shown: self.state.shown,
-        frameColorClass: self.state.frameColorClass,
-        statusText: self.state.statusText,
-        myTurn: self.state.myTurn,
-        myNumber: self.state.myNumber,
-        fieldState: self.state.fieldState,
-        moved: self.state.moved,
-        lastOpponentTurn: self.state.lastOpponentTurn
-      };
       //Показать поле
-      newStateParams.shown = true;
+      self.setState({ shown: true });
       //отображение текущего положения дел
+      console.log("received field state: ");
+      console.log(gameData.field);
+
       var tmp = "";
       gameData.nowTurn ? tmp = "framecolormyturn" : tmp = "framecolornotmyturn";
       if (self.isCheck(gameData.field)) {
         tmp = "framecolorcheck";
       }
+      self.setState({
+        frameColorClass: tmp
+      });
 
-      newStateParams.frameColorClass = tmp;
-
-      newStateParams.myTurn = gameData.nowTurn;
-      newStateParams.myNumber = gameData.playerNumber;
-      newStateParams.fieldState = gameData.field;
-      newStateParams.moved = gameData.moved;
-      newStateParams.lastOpponentTurn = gameData.lastOpponentTurn;
-
+      self.setState({ myTurn: gameData.nowTurn, myNumber: gameData.playerNumber, fieldState: gameData.field, moved: gameData.moved, lastOpponentTurn: gameData.lastOpponentTurn });
+      if (self.isMate()) {
+        alert("YOU LOSE!");
+      }
       if (gameData.nowTurn) {
         soundManager.play('my_turn');
-        newStateParams.statusText = "Ваш ход!";
+        self.setState({ statusText: "Ваш ход!" });
       } else {
-        newStateParams.statusText = "Ход соперника...";
+        self.setState({ statusText: "Ход соперника..." });
       }
-      self.setState({
-        shown: newStateParams.shown,
-        frameColorClass: newStateParams.frameColorClass,
-        statusText: newStateParams.statusText,
-        myTurn: newStateParams.myTurn,
-        myNumber: newStateParams.myNumber,
-        fieldState: newStateParams.fieldState,
-        moved: newStateParams.moved,
-        lastOpponentTurn: newStateParams.lastOpponentTurn
-      });
     });
   },
   restartGame: function () {
@@ -803,6 +784,91 @@ var GameField = React.createClass({
     return this.isZoneUnderAttack(fieldState, king_Coords, this.state.myNumber);
   },
 
+  isMate: function () {
+    if (this.isCheck(this.state.fieldState)) {
+      var cloneObject = function (obj) {
+        var res = {};
+        res = JSON.parse(JSON.stringify(obj));
+        return res;
+      };
+      //составим массив своих фигур с координатами
+      var myFigures = [];
+      for (var i = 0; i < 8; i++) {
+        for (var j = 0; j < 8; j++) {
+          if (this.isMyFigure(this.state.fieldState[i][j])) {
+            myFigures.push({
+              i: i,
+              j: j,
+              class: this.state.fieldState[i][j]
+            });
+          }
+        }
+      }
+      console.log("my figures:");
+      console.log(myFigures);
+      //перебор всех вариантов ходов для всех фигур.
+      for (var i = 0; i < myFigures.length; i++) {
+        var fromP = myFigures[i];
+        for (var x = 0; x < 8; x++) {
+          for (var y = 0; y < 8; y++) {
+            var toP = {
+              class: this.state.fieldState[x][y],
+              i: x,
+              j: y
+            };
+            var turnPossibleResult = this.isTurnPossible(fromP, toP);
+            var tmpFieldState = null;
+            tmpFieldState = cloneObject(this.state.fieldState);
+            //проверка возможности хода
+            if (turnPossibleResult) {
+              if (typeof (turnPossibleResult == 'object')) {
+                //рокировка. Передвинем ладью
+                if (turnPossibleResult.i == 6 && turnPossibleResult.j == 0) {
+                  //белая правая
+                  tmpFieldState[7][0] = "empty";
+                  tmpFieldState[5][0] = "rook_w";
+                }
+                if (turnPossibleResult.i == 2 && turnPossibleResult.j == 0) {
+                  //белая левая
+                  tmpFieldState[0][0] = "empty";
+                  tmpFieldState[3][0] = "rook_w";
+                }
+                if (turnPossibleResult.i == 6 && turnPossibleResult.j == 7) {
+                  //белая левая
+                  tmpFieldState[7][7] = "empty";
+                  tmpFieldState[5][7] = "rook_b";
+                }
+                if (turnPossibleResult.i == 2 && turnPossibleResult.j == 7) {
+                  //белая левая
+                  tmpFieldState[0][7] = "empty";
+                  tmpFieldState[3][7] = "rook_b";
+                }
+              }
+
+              tmpFieldState[fromP.i][fromP.j] = "empty";
+
+              if (turnPossibleResult == "queen_w") {
+                tmpFieldState[toP.i][toP.j] = "queen_w";
+              } else if (turnPossibleResult == "queen_b") {
+                tmpFieldState[toP.i][toP.j] = "queen_b";
+              } else {
+                tmpFieldState[toP.i][toP.j] = fromP.class;
+              }
+              console.log("turnPossibleResult");
+              console.log(turnPossibleResult);
+              console.log(fromP);
+              console.log(toP);
+              if (!this.isCheck(tmpFieldState)) {
+                return false;
+              }
+            }
+          }
+        }
+      }
+      return true;
+    }
+  },
+
   isTurnPossible: function (selectedFigure, placeToMove) {
     var result = false;
     var opponentAttacked = function () {
@@ -832,7 +898,7 @@ var GameField = React.createClass({
           //в дамки
           if (placeToMove.j == 7) result = "queen_w";
         };
-        if (selectedFigure.i == placeToMove.i && selectedFigure.j == placeToMove.j - 2 && placeToMove.class == "empty" && this.state.fieldState[placeToMove.i][placeToMove.j - 1] == "empty" && selectedFigure.j == 1) {
+        if (selectedFigure.i == placeToMove.i && selectedFigure.j == placeToMove.j - 2 && placeToMove.class == "empty" && selectedFigure.j == 1) {
           result = true;
         };
         //поедание
@@ -849,7 +915,7 @@ var GameField = React.createClass({
           //в дамки
           if (placeToMove.j == 0) result = "queen_b";
         };
-        if (selectedFigure.i == placeToMove.i && selectedFigure.j == placeToMove.j + 2 && placeToMove.class == "empty" && this.state.fieldState[placeToMove.i][placeToMove.j + 1] == "empty" && selectedFigure.j == 6) {
+        if (selectedFigure.i == placeToMove.i && selectedFigure.j == placeToMove.j + 2 && placeToMove.class == "empty" && selectedFigure.j == 6) {
           result = true;
         };
         //поедание
@@ -1086,10 +1152,6 @@ var GameField = React.createClass({
       default:
         result = false;
     }
-    if (result == true) {
-      //проверим, не возникает ли нам шах при таком ходе
-
-    }
     return result;
   },
   clickHandler: function (e) {
@@ -1146,6 +1208,12 @@ var GameField = React.createClass({
               tmpFieldState[3][7] = "rook_b";
             }
           }
+          //Если съели кого-то, то перенесем эту фигуру в зону съеденных
+          var lostFigure = null;
+          if (placeToMove.class != "empty") {
+            lostFigure = placeToMove.class;
+            this.props.addLostFigure(lostFigure);
+          }
 
           tmpFieldState[this.state.selectedFigure.i][this.state.selectedFigure.j] = "empty";
 
@@ -1178,13 +1246,6 @@ var GameField = React.createClass({
             tmp2.rook_b_r = true;
           }
           if (!this.isCheck(tmpFieldState)) {
-
-            //Если съели кого-то, то перенесем эту фигуру в зону съеденных
-            var lostFigure = null;
-            if (placeToMove.class != "empty") {
-              lostFigure = placeToMove.class;
-              this.props.addLostFigure(lostFigure);
-            }
             //отправить свой ход на сервер
             var turnContent = [[this.state.selectedFigure.i, this.state.selectedFigure.j], [placeToMove.i, placeToMove.j]];
             socket.emit('turn done', { playerNumber: this.state.myNumber, field: tmpFieldState, moved: this.state.moved, turnContent: turnContent, lostFigure: lostFigure });
@@ -1206,11 +1267,9 @@ var GameField = React.createClass({
             var self = this;
             var tmp = self.state.frameColorClass;
             var func = function () {
-              if (tmp == "framecolormyturn" && self.state.myTurn) {
-                self.setState({
-                  frameColorClass: tmp
-                });
-              }
+              self.setState({
+                frameColorClass: tmp
+              });
             };
             setTimeout(func, 1000);
             this.setState({
@@ -1257,10 +1316,10 @@ var GameField = React.createClass({
   render: function () {
     var self = this;
     function htmlField() {
-      console.log("FIELD STATE:");
-      console.log(self.state.fieldState);
-      console.log("moved:");
-      console.log(self.state.fieldState.moved);
+      //console.log("FIELD STATE:");
+      //console.log(self.state.fieldState);
+      //console.log("moved:");
+      //console.log(self.state.fieldState.moved);
       var result = [];
       var cnt = 1;
       var framecnt = 100;
