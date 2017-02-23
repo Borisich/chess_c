@@ -365,6 +365,7 @@ var GameField = React.createClass({
   addEndGameListenerOnce: function () {
     var self = this;
     socket.once('end game', function (data) {
+      self.myTurn = false;
       socket.removeAllListeners('game status');
       switch (data) {
         case "loose":
@@ -404,30 +405,47 @@ var GameField = React.createClass({
   addGameStatusListener: function () {
     var self = this;
     socket.on('game status', function (gameData) {
-      //Показать поле
-      self.setState({ shown: true });
-      //отображение текущего положения дел
-      console.log("received field state: ");
-      console.log(gameData.field);
 
-      var tmp = "";
-      gameData.nowTurn ? tmp = "framecolormyturn" : tmp = "framecolornotmyturn";
+      var frameColorClassNew = null;
+      var myTurnNew = null;
+      var myNumberNew = null;
+      var fieldStateNew = null;
+      var movedNew = null;
+      var lastOpponentTurnNew = null;
+      var statusTextNew = null;
+
+      frameColorClassNew = "";
+      gameData.nowTurn ? frameColorClassNew = "framecolormyturn" : frameColorClassNew = "framecolornotmyturn";
       if (self.isCheck(gameData.field)) {
-        tmp = "framecolorcheck";
+        frameColorClassNew = "framecolorcheck";
       }
-      self.setState({
-        frameColorClass: tmp
-      });
 
-      self.setState({ myTurn: gameData.nowTurn, myNumber: gameData.playerNumber, fieldState: gameData.field, moved: gameData.moved, lastOpponentTurn: gameData.lastOpponentTurn });
-      if (self.isMate()) {
-        alert("YOU LOSE!");
-      }
+      myTurnNew = gameData.nowTurn;
+      myNumberNew = gameData.playerNumber;
+      fieldStateNew = gameData.field;
+      movedNew = gameData.moved;
+      lastOpponentTurnNew = gameData.lastOpponentTurn;
+
       if (gameData.nowTurn) {
         soundManager.play('my_turn');
-        self.setState({ statusText: "Ваш ход!" });
+        statusTextNew = "Ваш ход!";
       } else {
-        self.setState({ statusText: "Ход соперника..." });
+        statusTextNew = "Ход соперника...";
+      }
+      self.setState({
+        shown: true,
+        frameColorClass: frameColorClassNew,
+        myTurn: myTurnNew,
+        myNumber: myNumberNew,
+        fieldState: fieldStateNew,
+        moved: movedNew,
+        lastOpponentTurn: lastOpponentTurnNew,
+        statusText: statusTextNew
+      });
+      if (self.isMate()) {
+        //отправим на сервер информацию о проигрыше
+        socket.emit("i loose", self.state.myNumber);
+        //alert("i loose sended");
       }
     });
   },
@@ -822,27 +840,7 @@ var GameField = React.createClass({
             //проверка возможности хода
             if (turnPossibleResult) {
               if (typeof (turnPossibleResult == 'object')) {
-                //рокировка. Передвинем ладью
-                if (turnPossibleResult.i == 6 && turnPossibleResult.j == 0) {
-                  //белая правая
-                  tmpFieldState[7][0] = "empty";
-                  tmpFieldState[5][0] = "rook_w";
-                }
-                if (turnPossibleResult.i == 2 && turnPossibleResult.j == 0) {
-                  //белая левая
-                  tmpFieldState[0][0] = "empty";
-                  tmpFieldState[3][0] = "rook_w";
-                }
-                if (turnPossibleResult.i == 6 && turnPossibleResult.j == 7) {
-                  //белая левая
-                  tmpFieldState[7][7] = "empty";
-                  tmpFieldState[5][7] = "rook_b";
-                }
-                if (turnPossibleResult.i == 2 && turnPossibleResult.j == 7) {
-                  //белая левая
-                  tmpFieldState[0][7] = "empty";
-                  tmpFieldState[3][7] = "rook_b";
-                }
+                //рокировка. Нельзя при шахе
               }
 
               tmpFieldState[fromP.i][fromP.j] = "empty";
