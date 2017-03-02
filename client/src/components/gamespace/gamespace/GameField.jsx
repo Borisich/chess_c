@@ -116,7 +116,11 @@ var GameField = React.createClass({
             },
         };
     },
-
+    timeoutData: {
+      frameColorClass: null,
+      timeoutId: null,
+    },
+    gameStatusListen: true,
     componentDidMount: function () {
         var self = this;
         self.addGameStatusListener();
@@ -132,7 +136,8 @@ var GameField = React.createClass({
       var self = this;
       socket.once('end game', function(data){
           self.myTurn = false;
-          socket.removeAllListeners('game status');
+          //socket.removeAllListeners('game status');
+          self.gameStatusListen = false;
           switch (data){
               case "loose":
                   soundManager.play('loose');
@@ -171,54 +176,56 @@ var GameField = React.createClass({
     addGameStatusListener: function(){
       var self = this;
       socket.on('game status', function (gameData) {
+        if (self.gameStatusListen){
+          var frameColorClassNew = null;
+          var myTurnNew = null;
+          var myNumberNew = null;
+          var fieldStateNew = null;
+          var movedNew = null;
+          var lastOpponentTurnNew = null;
+          var statusTextNew = null;
 
-        var frameColorClassNew = null;
-        var myTurnNew = null;
-        var myNumberNew = null;
-        var fieldStateNew = null;
-        var movedNew = null;
-        var lastOpponentTurnNew = null;
-        var statusTextNew = null;
+          frameColorClassNew = "";
+          gameData.nowTurn ? frameColorClassNew = "framecolormyturn" : frameColorClassNew = "framecolornotmyturn";
+          if (self.isCheck(gameData.field)){
+            frameColorClassNew = "framecolorcheck";
+          }
 
-        frameColorClassNew = "";
-        gameData.nowTurn ? frameColorClassNew = "framecolormyturn" : frameColorClassNew = "framecolornotmyturn";
-        if (self.isCheck(gameData.field)){
-          frameColorClassNew = "framecolorcheck";
-        }
+          myTurnNew = gameData.nowTurn;
+          myNumberNew = gameData.playerNumber;
+          fieldStateNew = gameData.field;
+          movedNew = gameData.moved;
+          lastOpponentTurnNew = gameData.lastOpponentTurn;
 
-        myTurnNew = gameData.nowTurn;
-        myNumberNew = gameData.playerNumber;
-        fieldStateNew = gameData.field;
-        movedNew = gameData.moved;
-        lastOpponentTurnNew = gameData.lastOpponentTurn;
-
-        if (gameData.nowTurn) {
-          soundManager.play('my_turn');
-          statusTextNew = "Ваш ход!";
-        } else {
-          statusTextNew = "Ход соперника...";
-        }
-        self.setState({
-          shown: true,
-          frameColorClass: frameColorClassNew,
-          myTurn: myTurnNew,
-          myNumber: myNumberNew,
-          fieldState: fieldStateNew,
-          moved: movedNew,
-          lastOpponentTurn: lastOpponentTurnNew,
-          statusText: statusTextNew
-        });
-        if (self.isMate()){
-          //отправим на сервер информацию о проигрыше
-          socket.emit("i loose",  self.state.myNumber);
-          //alert("i loose sended");
+          if (gameData.nowTurn) {
+            soundManager.play('my_turn');
+            statusTextNew = "Ваш ход!";
+          } else {
+            statusTextNew = "Ход соперника...";
+          }
+          self.setState({
+            shown: true,
+            frameColorClass: frameColorClassNew,
+            myTurn: myTurnNew,
+            myNumber: myNumberNew,
+            fieldState: fieldStateNew,
+            moved: movedNew,
+            lastOpponentTurn: lastOpponentTurnNew,
+            statusText: statusTextNew
+          });
+          if (self.isMate()){
+            //отправим на сервер информацию о проигрыше
+            socket.emit("i loose",  self.state.myNumber);
+            //alert("i loose sended");
+          }
         }
       });
     },
     restartGame: function(){
       var self = this;
       socket.removeAllListeners('restart canceled');
-      self.addGameStatusListener();
+      //self.addGameStatusListener();
+      self.gameStatusListen = true;
       self.addEndGameListenerOnce();
       self.setState({statusButton1: {
           disabled: false,
@@ -1065,21 +1072,25 @@ var GameField = React.createClass({
                   }
                 });
               }
-              else{
+              else {
                 var self = this;
-                var tmp = self.state.frameColorClass;
+                if (!this.timeoutData.timeoutId){
+                  this.timeoutData.frameColorClass = self.state.frameColorClass;
+                  this.setState({
+                    frameColorClass: "framecolorcheck",
+                    statusText: "Король в опасности!",
+                  });
+                }
+                else{
+                  clearTimeout(this.timeoutData.timeoutId);
+                }
                 var func = function(){
+                  self.timeoutData.timeoutId = null;
                   self.setState({
-                    frameColorClass: tmp
+                    frameColorClass: self.state.myTurn ? self.timeoutData.frameColorClass : self.state.frameColorClass
                   })
                 }
-                setTimeout(func, 1000);
-                this.setState({
-                  frameColorClass: "framecolorcheck",
-                  statusText: "Король в опасности!"
-                });
-
-
+                this.timeoutData.timeoutId = setTimeout(func, 1000);
               }
 
 

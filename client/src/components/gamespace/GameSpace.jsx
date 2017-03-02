@@ -24,6 +24,7 @@ var GameSpace = React.createClass({
     });*/
 
     socket.on('game status', function (data) {
+      //alert ('gameStatus!');
       var lostFigures = [];
       if (data.lostFigures.figures){
         lostFigures = data.lostFigures.figures;
