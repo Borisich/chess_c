@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var io = require('socket.io-client');
 
-const locally = true;
+const locally = false;
 if (locally) {
   var socket = io('http://localhost');
 } else {
@@ -362,6 +362,21 @@ var GameField = React.createClass({
     socket.on('opponent status', function (data) {
       console.log("opponentOffline: " + data.opponentOffline);
       data.opponentOffline ? self.setState({ connectionText: "Соперник не в сети" }) : self.setState({ connectionText: "" });
+    });
+    socket.on('game not found', function () {
+      self.setState({
+        shown: false
+      });
+    });
+    socket.on('room is full', function () {
+      self.setState({
+        shown: false
+      });
+    });
+    socket.on('invite link', function () {
+      self.setState({
+        shown: false
+      });
     });
 
     //Обработка события "конец игры"
@@ -1618,7 +1633,8 @@ var InviteLink = React.createClass({
     getInitialState: function () {
         return {
             link: "",
-            shown: false,
+            loading: true,
+            shown: true,
             comment: "",
             roomID: ""
         };
@@ -1633,6 +1649,7 @@ var InviteLink = React.createClass({
             self.setState({
                 shown: true,
                 link: link,
+                loading: false,
                 comment: "Ссылка для приглашения соперника: "
             });
         });
@@ -1655,6 +1672,7 @@ var InviteLink = React.createClass({
 
             self.setState({
                 shown: true,
+                loading: false,
                 link: "",
                 comment: "Ошибка. Комната уже занята."
             });
@@ -1665,6 +1683,7 @@ var InviteLink = React.createClass({
             console.log("Игра не найдена");
             self.setState({
                 shown: true,
+                loading: false,
                 link: "",
                 comment: "Ошибка. Игра не найдена. Проверьте правильность ссылки."
             });
@@ -1692,6 +1711,9 @@ var InviteLink = React.createClass({
         });*/
         socket.once('game status', function () {
             //alert("Игра началась");
+            self.setState({
+                shown: false
+            });
             if (self.state.link) {
                 //если не игрок 2
                 if (window.location.href + window.location.search != self.state.link + "1") {
@@ -1704,6 +1726,16 @@ var InviteLink = React.createClass({
 
     render: function () {
         var additionalInfo = "";
+        var loadingData = "";
+        if (this.state.loading) {
+            loadingData = React.createElement(
+                'div',
+                null,
+                '\u041F\u043E\u0434\u043E\u0436\u0434\u0438\u0442\u0435, \u0438\u0434\u0435\u0442 \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u0435 \u0441 \u0441\u0435\u0440\u0432\u0435\u0440\u043E\u043C...',
+                React.createElement('br', null),
+                React.createElement('img', { src: 'img/loading.gif', height: '200', width: '200' })
+            );
+        };
         if (this.state.link) {
             additionalInfo = React.createElement(
                 'div',
@@ -1740,6 +1772,7 @@ var InviteLink = React.createClass({
                     '\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 \u0441\u0435\u0442\u0435\u0432\u0443\u044E \u0438\u0433\u0440\u0443 "Chess Pro Incorporated"!'
                 ),
                 React.createElement('br', null),
+                loadingData,
                 this.state.comment,
                 React.createElement('br', null),
                 React.createElement(

@@ -69,7 +69,7 @@ var GameSpace = React.createClass({
           <Chat/>
         </div>
         <div id="lostfigureswhite">
-          <LostFigures lostFigures={this.state.lostFigures.figures} lastMarked={this.state.lostFigures.lastMarkedWhite}side='white'/>
+          <LostFigures lostFigures={this.state.lostFigures.figures} lastMarked={this.state.lostFigures.lastMarkedWhite} side='white'/>
         </div>
       </div>
     )

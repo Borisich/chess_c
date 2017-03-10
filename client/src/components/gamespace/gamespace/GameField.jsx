@@ -128,6 +128,21 @@ var GameField = React.createClass({
           console.log("opponentOffline: " + data.opponentOffline);
           data.opponentOffline ? self.setState({connectionText: "Соперник не в сети"}) : self.setState({connectionText: ""});
         });
+        socket.on ('game not found', function() {
+          self.setState({
+            shown: false
+          });
+        });
+        socket.on ('room is full', function() {
+          self.setState({
+            shown: false
+          });
+        });
+        socket.on ('invite link', function() {
+          self.setState({
+            shown: false
+          });
+        });
 
         //Обработка события "конец игры"
         self.addEndGameListenerOnce();

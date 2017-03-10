@@ -7,7 +7,8 @@ var InviteLink = React.createClass({
     getInitialState: function () {
         return {
             link: "",
-            shown: false,
+            loading: true,
+            shown: true,
             comment: "",
             roomID: ""
         };
@@ -22,6 +23,7 @@ var InviteLink = React.createClass({
             self.setState({
                 shown: true,
                 link: link,
+                loading: false,
                 comment: "Ссылка для приглашения соперника: "
             });
         });
@@ -44,6 +46,7 @@ var InviteLink = React.createClass({
 
             self.setState({
                 shown: true,
+                loading: false,
                 link: "",
                 comment: "Ошибка. Комната уже занята."
             });
@@ -55,6 +58,7 @@ var InviteLink = React.createClass({
             console.log("Игра не найдена");
             self.setState({
                 shown: true,
+                loading: false,
                 link: "",
                 comment: "Ошибка. Игра не найдена. Проверьте правильность ссылки."
             });
@@ -82,6 +86,9 @@ var InviteLink = React.createClass({
         });*/
         socket.once('game status', function () {
             //alert("Игра началась");
+            self.setState({
+                shown: false
+            });
             if (self.state.link){ //если не игрок 2
               if((window.location.href + window.location.search) != (self.state.link + "1")){
                 socket.disconnect();
@@ -93,6 +100,14 @@ var InviteLink = React.createClass({
 
     render: function(){
         var additionalInfo = "";
+        var loadingData = "";
+        if (this.state.loading) {
+          loadingData =
+          <div>
+            Подождите, идет соединение с сервером...<br/>
+            <img src="img/loading.gif" height="200" width="200" />
+          </div>
+        };
         if (this.state.link) {
           additionalInfo =
           <div>
@@ -110,6 +125,7 @@ var InviteLink = React.createClass({
             <div>
               <h1>Добро пожаловать в сетевую игру "Chess Pro Incorporated"!</h1>
               <br/>
+              {loadingData}
               {this.state.comment}
               <br/>
 
